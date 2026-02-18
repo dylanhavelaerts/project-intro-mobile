@@ -1,11 +1,31 @@
-import { Stack } from "expo-router";
+import { Slot } from "expo-router";
+import { View, StyleSheet } from "react-native";
 
-const RootLayout = () => {
+import Header from "./header";
+import Footer from "./footer";
+
+const HomeLayout = () => {
   return (
-    <Stack>
-      <Stack.Screen name="index" />
-    </Stack>
-  );
-}
+    <View style={styles.container}>
+      <Header />
 
-export default RootLayout;
+      <View style={styles.content}>
+        <Slot />
+      </View>
+
+      <Footer />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    backgroundColor: "white"
+  },
+});
+
+export default HomeLayout;
