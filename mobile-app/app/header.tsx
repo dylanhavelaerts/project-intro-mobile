@@ -36,19 +36,20 @@ const styles = StyleSheet.create({
     color: "white"
   },
   menuText:{
-    color: "white"
+    color: "white",
+    fontFamily: "System"
   },
   menuContainer: {
     flexDirection: "row",
     gap: 25,
   },
-    icon: {
-    width: 20, 
-    height: 20,
-    marginBottom: 5,
-    resizeMode: "contain",
-    tintColor: "white",
-  },
+  icon: {
+  width: 20, 
+  height: 20,
+  marginBottom: 5,
+  resizeMode: "contain",
+  tintColor: "white",
+},
 });
 
 export default Header;
