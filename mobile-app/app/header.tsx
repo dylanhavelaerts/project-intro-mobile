@@ -10,11 +10,11 @@ const Header = () => {
 
 const styles = StyleSheet.create({
   content: {
-    backgroundColor:"#335FFF",
-    height:"5%",
+    backgroundColor: "#335FFF",
+    height: "5%",
     textAlign: "left",
-    paddingLeft: "2vw",
-    color: "white"
+    paddingLeft: 2,
+    color: "white",
   },
 });
 
