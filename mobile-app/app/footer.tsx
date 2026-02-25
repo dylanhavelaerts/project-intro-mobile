@@ -5,25 +5,25 @@ const Footer = () => {
     <View style={styles.container}>
       <View style={styles.menuContainer}>
         <View style={styles.itemWrapper}>
-          <Image 
-            source={require("../assets/images/homepage/home.png")} 
-            style={styles.icon} 
+          <Image
+            source={require("../assets/images/homepage/home.png")}
+            style={styles.icon}
           />
           <Text style={styles.menuText}>Home</Text>
         </View>
 
         <View style={styles.itemWrapper}>
-          <Image 
-            source={require("../assets/images/homepage/group.png")} 
-            style={styles.icon} 
+          <Image
+            source={require("../assets/images/homepage/group.png")}
+            style={styles.icon}
           />
           <Text style={styles.menuText}>Community</Text>
         </View>
 
         <View style={styles.itemWrapper}>
-          <Image 
-            source={require("../assets/images/homepage/profile.png")} 
-            style={styles.icon} 
+          <Image
+            source={require("../assets/images/homepage/profile.png")}
+            style={styles.icon}
           />
           <Text style={styles.menuText}>Profile</Text>
         </View>
@@ -34,27 +34,27 @@ const Footer = () => {
 
 const styles = StyleSheet.create({
   container: {
-    height: 110, 
+    height: 84,
     backgroundColor: "white",
-    borderTopWidth: 1, 
+    borderTopWidth: 0.65,
     borderTopColor: "lightgrey",
-    justifyContent: "center", 
+    justifyContent: "center",
   },
   menuText: {
-    color: "grey", 
+    color: "grey",
     fontSize: 14,
-    paddingBottom: 20
+    paddingBottom: 20,
   },
   menuContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 50, 
+    paddingHorizontal: 50,
   },
   itemWrapper: {
     alignItems: "center",
   },
   icon: {
-    width: 20, 
+    width: 20,
     height: 20,
     marginBottom: 5,
     resizeMode: "contain",

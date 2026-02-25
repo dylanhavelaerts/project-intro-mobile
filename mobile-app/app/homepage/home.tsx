@@ -2,31 +2,48 @@ import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
 
 const Index = () => {
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+    >
       <View style={styles.section1}>
-        <Text style={[styles.titleText, styles.topMargin]}>The court is calling your name, user</Text>
+        <Text style={[styles.titleText, styles.topMargin]}>
+          The court is calling your name, user
+        </Text>
         <View style={styles.itemContainer}>
           <View style={styles.iconWrapper}>
             <View style={styles.circleBackground}>
-              <Image source={require("../../assets/images/homepage/court.png")} style={styles.icon} />
+              <Image
+                source={require("../../assets/images/homepage/court.png")}
+                style={styles.icon}
+              />
             </View>
             <Text style={styles.label}>Book a court</Text>
           </View>
           <View style={styles.iconWrapper}>
             <View style={styles.circleBackground}>
-              <Image source={require("../../assets/images/homepage/learn.png")} style={styles.icon} />
+              <Image
+                source={require("../../assets/images/homepage/learn.png")}
+                style={styles.icon}
+              />
             </View>
             <Text style={styles.label}>Learn</Text>
           </View>
           <View style={styles.iconWrapper}>
             <View style={styles.circleBackground}>
-              <Image source={require("../../assets/images/homepage/compete.png")} style={styles.icon} />
+              <Image
+                source={require("../../assets/images/homepage/compete.png")}
+                style={styles.icon}
+              />
             </View>
             <Text style={styles.label}>Compete</Text>
           </View>
           <View style={styles.iconWrapper}>
             <View style={styles.circleBackground}>
-              <Image source={require("../../assets/images/homepage/tennis-ball.png")} style={styles.icon} />
+              <Image
+                source={require("../../assets/images/homepage/tennis-ball.png")}
+                style={styles.icon}
+              />
             </View>
             <Text style={styles.label}>Find a match</Text>
           </View>
@@ -35,34 +52,47 @@ const Index = () => {
 
       <View style={styles.section}>
         <Text style={styles.titleText}>Suggested clubs for you</Text>
-        <Text style={styles.itemText}>Child component for succested courts</Text>
+        <Text style={styles.itemText}>
+          Child component for succested courts
+        </Text>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.titleText}>Activities</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScrollPadding}>
-          
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.horizontalScrollPadding}
+        >
           <View style={styles.activityCard}>
-            <Image source={require("../../assets/images/homepage/private-class.png")} style={styles.cardIcon} />
+            <Image
+              source={require("../../assets/images/homepage/private-class.png")}
+              style={styles.cardIcon}
+            />
             <View style={styles.cardTextContainer}>
               <Text style={styles.cardTitle}>Private classes</Text>
             </View>
           </View>
 
           <View style={styles.activityCard}>
-            <Image source={require("../../assets/images/homepage/public.png")} style={styles.cardIcon} />
+            <Image
+              source={require("../../assets/images/homepage/public.png")}
+              style={styles.cardIcon}
+            />
             <View style={styles.cardTextContainer}>
               <Text style={styles.cardTitle}>Private classes</Text>
             </View>
           </View>
 
           <View style={styles.activityCard}>
-            <Image source={require("../../assets/images/homepage/courses.png")} style={styles.cardIcon} />
+            <Image
+              source={require("../../assets/images/homepage/courses.png")}
+              style={styles.cardIcon}
+            />
             <View style={styles.cardTextContainer}>
               <Text style={styles.cardTitle}>Courses</Text>
             </View>
           </View>
-
         </ScrollView>
       </View>
 
@@ -70,12 +100,12 @@ const Index = () => {
         <Text style={styles.titleText}>Suggested for you</Text>
         <Text style={styles.itemText}>Add friends</Text>
       </View>
-      
+
       <View style={styles.section}>
         <Text style={styles.titleText}>Improve your level</Text>
         <Text style={styles.itemText}>Child component</Text>
       </View>
-      
+
       <View style={styles.section}>
         <Text style={styles.titleText}>Compete with others</Text>
         <Text style={styles.itemText}>Open matches</Text>
@@ -87,7 +117,6 @@ const Index = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F7F9",
   },
   scrollContent: {
     paddingBottom: 40,
@@ -105,7 +134,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     fontFamily: "System",
     marginBottom: 10,
-    color: "#040b27"
+    color: "#040b27",
   },
   topMargin: {
     marginTop: 25,
