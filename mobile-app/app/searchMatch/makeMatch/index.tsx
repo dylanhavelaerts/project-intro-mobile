@@ -1,26 +1,40 @@
-import { View, Text, StyleSheet, Image, ScrollView } from "react-native";
+import { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  ScrollView,
+  Pressable,
+  Dimensions,
+} from "react-native";
+
+const { width } = Dimensions.get("window");
 
 const MakeMatch = () => {
+  const [activeTab, setActiveTab] = useState("openMatches");
   return (
     <ScrollView style={styles.container}>
       <Image
         source={require("@/assets/resources/padelvenuetero.jpg")}
         style={styles.padelvenue}
-      ></Image>
+        resizeMode="cover"
+      />
       <View style={styles.totalaboveview}>
         <View style={styles.viewstyle}>
-          <View>
-            <Text style={styles.venuetitle}>Venue name :</Text>
-            <Text style={styles.venueadress}>Adress:</Text>
+          <View style={styles.venueInfo}>
+            <Text style={styles.venuetitle}>Venue name</Text>
+            <Text style={styles.venueadress}>Address</Text>
           </View>
-
-          <Text>❤️</Text>
+          <Text style={styles.heartIcon}>❤️</Text>
         </View>
         <View style={styles.viewstyletwo}>
-          <Text style={styles.venueadress}>Home</Text>
-          <Text style={styles.venueadress}>Book</Text>
-          <Text style={styles.venueadress}>Open Matches</Text>
-          <Text style={styles.venueadress}>Competitions</Text>
+          <Pressable>
+            <Text style={styles.tabText}>Home</Text>
+          </Pressable>
+          <Text style={styles.tabText}>Book</Text>
+          <Text style={styles.tabText}>Open Matches</Text>
+          <Text style={styles.tabText}>Competitions</Text>
         </View>
       </View>
     </ScrollView>
@@ -30,38 +44,63 @@ const MakeMatch = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    textAlign: "left",
-    paddingLeft: 2,
-    color: "white",
+    backgroundColor: "#f5f5f5",
   },
   padelvenue: {
-    width: "100%",
-    height: 200,
+    width: width,
+    height: width * 0.6,
+    resizeMode: "cover",
   },
-  venuetitle: {
-    fontWeight: "bold",
-    fontSize: 20,
-  },
-  venueadress: {
-    color: "grey",
+  totalaboveview: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    marginTop: -20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 5,
   },
   viewstyle: {
-    marginTop: -20,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
     display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
+  },
+  venueInfo: {
+    flex: 1,
+  },
+  venuetitle: {
+    fontWeight: "bold",
+    fontSize: 22,
+    color: "#333",
+    marginBottom: 6,
+  },
+  venueadress: {
+    color: "#888",
+    fontSize: 14,
+  },
+  heartIcon: {
+    fontSize: 24,
+    marginLeft: 15,
   },
   viewstyletwo: {
     display: "flex",
     flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 10,
+    justifyContent: "space-around",
+    paddingHorizontal: 15,
+    paddingVertical: 16,
   },
-  totalaboveview: {
-    backgroundColor: "#fff",
+  tabText: {
+    color: "#666",
+    fontSize: 14,
+    fontWeight: "500",
   },
 });
 
