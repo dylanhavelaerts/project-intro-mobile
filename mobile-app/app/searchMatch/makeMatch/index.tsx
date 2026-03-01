@@ -7,12 +7,14 @@ import {
   ScrollView,
   Pressable,
   Dimensions,
+  Alert,
 } from "react-native";
 
 const { width } = Dimensions.get("window");
 
 const MakeMatch = () => {
   const [activeTab, setActiveTab] = useState("openMatches");
+  const [selectedDay, setSelectedDay] = useState("");
   return (
     <ScrollView style={styles.container}>
       <Image
@@ -29,13 +31,109 @@ const MakeMatch = () => {
           <Text style={styles.heartIcon}>❤️</Text>
         </View>
         <View style={styles.viewstyletwo}>
-          <Pressable>
-            <Text style={styles.tabText}>Home</Text>
+          <Pressable
+            onPress={() => {
+              setActiveTab("Home");
+            }}
+          >
+            <Text
+              style={activeTab == "Home" ? styles.activeTab : styles.tabText}
+            >
+              Home
+            </Text>
           </Pressable>
-          <Text style={styles.tabText}>Book</Text>
-          <Text style={styles.tabText}>Open Matches</Text>
-          <Text style={styles.tabText}>Competitions</Text>
+          <Pressable
+            onPress={() => {
+              setActiveTab("Book");
+            }}
+          >
+            <Text
+              style={activeTab == "Book" ? styles.activeTab : styles.tabText}
+            >
+              Book
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              setActiveTab("Open Matches");
+            }}
+          >
+            <Text
+              style={
+                activeTab == "Open Matches" ? styles.activeTab : styles.tabText
+              }
+            >
+              Open Matches
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => {
+              setActiveTab("Competitions");
+            }}
+          >
+            <Text
+              style={
+                activeTab == "Competitions" ? styles.activeTab : styles.tabText
+              }
+            >
+              Competitions
+            </Text>
+          </Pressable>
         </View>
+        {activeTab == "Open Matches" && (
+          // Height onderaan een klein beetje aangepast zodat dat er mooier uitzag op mn scherm maar styling moet sws nog verbeterd worden.
+          <ScrollView horizontal style={{ height: "20%" }}>
+            <Pressable
+              onPress={() => {
+                setSelectedDay("MON");
+              }}
+            >
+              <View>
+                <Text>MON</Text>
+                <View
+                  style={selectedDay === "MON" ? styles.selectedCircle : null}
+                >
+                  <Text>09</Text>
+                </View>
+
+                <Text>Feb</Text>
+              </View>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                setSelectedDay("TUE");
+              }}
+            >
+              <View>
+                <Text>TUE</Text>
+                <View
+                  style={selectedDay === "TUE" ? styles.selectedCircle : null}
+                >
+                  <Text>10</Text>
+                </View>
+
+                <Text>Feb</Text>
+              </View>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                setSelectedDay("WED");
+              }}
+            >
+              <View>
+                <Text>WED</Text>
+                <View
+                  style={selectedDay === "WED" ? styles.selectedCircle : null}
+                >
+                  <Text>11</Text>
+                </View>
+
+                <Text>Feb</Text>
+              </View>
+            </Pressable>
+          </ScrollView>
+        )}
       </View>
     </ScrollView>
   );
@@ -56,13 +154,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     marginTop: -20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
     elevation: 5,
   },
   viewstyle: {
@@ -101,6 +192,17 @@ const styles = StyleSheet.create({
     color: "#666",
     fontSize: 14,
     fontWeight: "500",
+  },
+  activeTab: {
+    backgroundColor: "red",
+  },
+  selectedCircle: {
+    backgroundColor: "#333",
+    borderRadius: 50,
+    width: 35,
+    height: 35,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 
