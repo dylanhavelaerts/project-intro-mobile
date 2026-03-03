@@ -10,13 +10,11 @@ const Index = () => {
         alignItems: "center",
       }}
     >
-
-    <Link href="/homepage/home" asChild>
-      <Button title="Home"/>
-    </Link>
-
+      <Link href="/homepage/home" asChild>
+        <Button title="Home" />
+      </Link>
     </View>
   );
-}
+};
 
 export default Index;
