@@ -1,5 +1,5 @@
 import { Link } from "expo-router";
-import { Text, View, Button } from "react-native";
+import { View, Button } from "react-native";
 
 const Index = () => {
   return (
@@ -12,6 +12,10 @@ const Index = () => {
     >
       <Link href="/homepage/home" asChild>
         <Button title="Home" />
+      </Link>
+
+      <Link href="/searchMatch/makeMatch" asChild>
+        <Button title="Go to Make Match" />
       </Link>
     </View>
   );

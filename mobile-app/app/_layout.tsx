@@ -7,12 +7,19 @@ import Footer from "./footer";
 const HomeLayout = () => {
   return (
     <View style={styles.container}>
+<<<<<<< HEAD
       <Header />
 
       <View style={styles.content}>
         <Slot />
       </View>
 
+=======
+      <View style={styles.content}>
+        <Slot />
+      </View>
+
+>>>>>>> origin/page-makeMatch
       <Footer />
     </View>
   );
@@ -24,7 +31,11 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+<<<<<<< HEAD
     backgroundColor: "white"
+=======
+    backgroundColor: "white",
+>>>>>>> origin/page-makeMatch
   },
 });
 
