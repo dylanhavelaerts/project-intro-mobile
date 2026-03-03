@@ -186,6 +186,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     borderWidth: 1,
     borderColor: "#E5E7EB",
+    overflow: "hidden",
   },
   cardIcon: {
     width: 45,
@@ -195,11 +196,12 @@ const styles = StyleSheet.create({
   },
   cardTextContainer: {
     marginLeft: 15,
+    flex: 1,
   },
   cardTitle: {
     fontSize: 14,
-    width: 90,
     color: "#040b27",
+    flexShrink: 1,
   },
 });
 
