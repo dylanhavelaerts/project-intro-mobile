@@ -1,4 +1,12 @@
-import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
+import { Link } from "expo-router";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+} from "react-native";
 
 const Index = () => {
   return (
@@ -11,19 +19,21 @@ const Index = () => {
           The court is calling your name, user
         </Text>
         <View style={styles.itemContainer}>
+          <Link href="/(noHeaders)/bookCourt" asChild>
+            <TouchableOpacity style={styles.iconWrapper}>
+              <View style={styles.circleBackground}>
+                <Image
+                  source={require("../../../assets/images/homepage/court.png")}
+                  style={styles.icon}
+                />
+              </View>
+              <Text style={styles.label}>Book a court</Text>
+            </TouchableOpacity>
+          </Link>
           <View style={styles.iconWrapper}>
             <View style={styles.circleBackground}>
               <Image
-                source={require("../../assets/images/homepage/court.png")}
-                style={styles.icon}
-              />
-            </View>
-            <Text style={styles.label}>Book a court</Text>
-          </View>
-          <View style={styles.iconWrapper}>
-            <View style={styles.circleBackground}>
-              <Image
-                source={require("../../assets/images/homepage/learn.png")}
+                source={require("../../../assets/images/homepage/learn.png")}
                 style={styles.icon}
               />
             </View>
@@ -32,7 +42,7 @@ const Index = () => {
           <View style={styles.iconWrapper}>
             <View style={styles.circleBackground}>
               <Image
-                source={require("../../assets/images/homepage/compete.png")}
+                source={require("../../../assets/images/homepage/compete.png")}
                 style={styles.icon}
               />
             </View>
@@ -41,7 +51,7 @@ const Index = () => {
           <View style={styles.iconWrapper}>
             <View style={styles.circleBackground}>
               <Image
-                source={require("../../assets/images/homepage/tennis-ball.png")}
+                source={require("../../../assets/images/homepage/tennis-ball.png")}
                 style={styles.icon}
               />
             </View>
@@ -66,7 +76,7 @@ const Index = () => {
         >
           <View style={styles.activityCard}>
             <Image
-              source={require("../../assets/images/homepage/private-class.png")}
+              source={require("../../../assets/images/homepage/private-class.png")}
               style={styles.cardIcon}
             />
             <View style={styles.cardTextContainer}>
@@ -76,7 +86,7 @@ const Index = () => {
 
           <View style={styles.activityCard}>
             <Image
-              source={require("../../assets/images/homepage/public.png")}
+              source={require("../../../assets/images/homepage/public.png")}
               style={styles.cardIcon}
             />
             <View style={styles.cardTextContainer}>
@@ -86,7 +96,7 @@ const Index = () => {
 
           <View style={styles.activityCard}>
             <Image
-              source={require("../../assets/images/homepage/courses.png")}
+              source={require("../../../assets/images/homepage/courses.png")}
               style={styles.cardIcon}
             />
             <View style={styles.cardTextContainer}>
