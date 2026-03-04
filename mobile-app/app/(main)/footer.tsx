@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, Image } from "react-native";
+import { router } from "expo-router";
+import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 
 const Footer = () => {
   return (
@@ -21,11 +22,13 @@ const Footer = () => {
         </View>
 
         <View style={styles.itemWrapper}>
-          <Image
-            source={require("../../assets/images/homepage/profile.png")}
-            style={styles.icon}
-          />
-          <Text style={styles.menuText}>Profile</Text>
+          <TouchableOpacity onPress={() => router.push("/")}>
+            <Image
+              source={require("../../assets/images/homepage/profile.png")}
+              style={styles.icon}
+            />
+            <Text style={styles.menuText}>Profile</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>

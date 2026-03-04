@@ -13,10 +13,9 @@ const firebaseConfig = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-export const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage),
-});
 
-export const db = getFirestore(app);
+// Initialize Cloud Firestore and get a reference to the service
+const db = getFirestore(app);
