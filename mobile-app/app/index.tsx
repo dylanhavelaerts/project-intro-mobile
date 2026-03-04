@@ -1,5 +1,5 @@
-import { Text, View, Image, Pressable } from "react-native";
-import { router } from "expo-router";
+import { Link } from "expo-router";
+import { Text, View, Button } from "react-native";
 
 const Index = () => {
   return (
@@ -10,10 +10,9 @@ const Index = () => {
         alignItems: "center",
       }}
     >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-      <Pressable onPress={() => router.push("/searchMatch/makeMatch")}>
-        <Text>Go to Make Match</Text>
-      </Pressable>
+      <Link href="/homepage/home" asChild>
+        <Button title="Home" />
+      </Link>
     </View>
   );
 };

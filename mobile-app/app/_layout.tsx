@@ -7,6 +7,8 @@ import Footer from "./footer";
 const HomeLayout = () => {
   return (
     <View style={styles.container}>
+      <Header />
+
       <View style={styles.content}>
         <Slot />
       </View>

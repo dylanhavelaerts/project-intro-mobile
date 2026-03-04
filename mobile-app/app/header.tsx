@@ -1,20 +1,59 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Image } from "react-native";
 
 const Header = () => {
   return (
-    <View style={styles.content}>
-      <h2>Playtomic</h2>
+    <View style={styles.container}>
+      <Text style={styles.logo}>Playtomic</Text>
+
+      <View style={styles.menuContainer}>
+        <Image
+          source={require("../assets/images/homepage/bell.png")}
+          style={styles.icon}
+        />
+        <Image
+          source={require("../assets/images/homepage/menu-burger.png")}
+          style={styles.icon}
+        />
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  content: {
+  container: {
+    height: 110,
     backgroundColor: "#335FFF",
-    height: "5%",
-    textAlign: "left",
-    paddingLeft: 2,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 50,
+    paddingHorizontal: 18,
     color: "white",
+  },
+  logo: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "white",
+    letterSpacing: 7,
+    textTransform: "uppercase",
+    flex: 1,
+    marginRight: 10,
+    fontFamily: "Montserrat",
+  },
+  menuText: {
+    color: "white",
+    fontFamily: "System",
+  },
+  menuContainer: {
+    flexDirection: "row",
+    gap: 25,
+  },
+  icon: {
+    width: 20,
+    height: 20,
+    marginBottom: 5,
+    resizeMode: "contain",
+    tintColor: "white",
   },
 });
 
