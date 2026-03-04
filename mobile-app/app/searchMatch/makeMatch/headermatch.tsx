@@ -1,13 +1,21 @@
-import { View, Text, StyleSheet, Image } from "react-native";
+import { View, Text, StyleSheet, Image, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 
 const HeaderMatch = () => {
+  const router = useRouter();
+
   return (
     <View style={styles.content}>
-      <Text style={styles.icon}>←</Text>
+      <Pressable onPress={() => router.push("/homepage/home")}>
+        <Image
+          source={require("@/assets/images/bookCourt/back.png")}
+          style={styles.icon}
+        />
+      </Pressable>
       <Image
         source={require("@/assets/resources/share.png")}
         style={styles.icon}
-      ></Image>
+      />
     </View>
   );
 };

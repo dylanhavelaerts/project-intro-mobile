@@ -7,7 +7,8 @@ import {
   ScrollView,
   Pressable,
   Dimensions,
-  Alert,
+  FlatList,
+  Switch,
 } from "react-native";
 
 const { width } = Dimensions.get("window");
@@ -15,6 +16,17 @@ const { width } = Dimensions.get("window");
 const MakeMatch = () => {
   const [activeTab, setActiveTab] = useState("openMatches");
   const [selectedDay, setSelectedDay] = useState("");
+  const [showAvailable, setShowAvailable] = useState(true);
+  const timeSlots = [
+    "19:30",
+    "20:00",
+    "20:30",
+    "21:00",
+    "21:30",
+    "22:00",
+    "22:30",
+    "23:00",
+  ];
   const generateDays = () => {
     const days = [];
     const today = new Date();
@@ -45,7 +57,10 @@ const MakeMatch = () => {
             <Text style={styles.venuetitle}>Venue name</Text>
             <Text style={styles.venueadress}>Address</Text>
           </View>
-          <Text style={styles.heartIcon}>❤️</Text>
+          <Image
+            source={require("@/assets/images/bookCourt/heart.png")}
+            style={{ height: 20, width: 20 }}
+          ></Image>
         </View>
         <View style={styles.viewstyletwo}>
           <Pressable
@@ -99,41 +114,51 @@ const MakeMatch = () => {
           </Pressable>
         </View>
         {activeTab == "Open Matches" && (
-          // Height onderaan een klein beetje aangepast zodat dat er mooier uitzag op mn scherm maar styling moet sws nog verbeterd worden.
-          <ScrollView
-            horizontal
-            style={{
-              height: "20%",
-              padding: 10,
-              backgroundColor: "#f5f5f5",
-            }}
-          >
-            {generateDays().map((item) => (
-              <Pressable
-                key={item.date}
-                onPress={() => setSelectedDay(item.day)}
-              >
-                <View style={styles.dayCard}>
-                  <Text>{item.day}</Text>
-                  <View
-                    style={[
-                      styles.circle,
-                      selectedDay === item.day && styles.selectedCircle,
-                    ]}
-                  >
-                    <Text
-                      style={
-                        selectedDay === item.day ? { color: "white" } : null
-                      }
+          <View style={{ backgroundColor: "#f5f5f5" }}>
+            <ScrollView
+              horizontal
+              style={{
+                padding: 10,
+              }}
+            >
+              {generateDays().map((item) => (
+                <Pressable
+                  key={item.date}
+                  onPress={() => setSelectedDay(item.day)}
+                >
+                  <View style={styles.dayCard}>
+                    <Text>{item.day}</Text>
+                    <View
+                      style={[
+                        styles.circle,
+                        selectedDay === item.day && styles.selectedCircle,
+                      ]}
                     >
-                      {item.date}
-                    </Text>
+                      <Text
+                        style={
+                          selectedDay === item.day ? { color: "white" } : null
+                        }
+                      >
+                        {item.date}
+                      </Text>
+                    </View>
+                    <Text>{item.month}</Text>
                   </View>
-                  <Text>{item.month}</Text>
-                </View>
-              </Pressable>
-            ))}
-          </ScrollView>
+                </Pressable>
+              ))}
+            </ScrollView>
+            <View style={styles.toggleRow}>
+              <Text>Show available slots only</Text>
+              <Switch value={showAvailable} onValueChange={setShowAvailable} />
+            </View>
+            <ScrollView horizontal style={styles.timeSlotsContainer}>
+              {timeSlots.map((item) => (
+                <Pressable key={item} style={styles.timeSlot}>
+                  <Text>{item}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
         )}
       </View>
     </ScrollView>
@@ -218,6 +243,26 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderColor: "black",
     borderWidth: 0.5,
+  },
+  toggleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 25,
+  },
+  timeSlot: {
+    flex: 1,
+    margin: 5,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  timeSlotsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    padding: 10,
   },
 });
 
