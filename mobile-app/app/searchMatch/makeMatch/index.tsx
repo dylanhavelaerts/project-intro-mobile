@@ -15,6 +15,23 @@ const { width } = Dimensions.get("window");
 const MakeMatch = () => {
   const [activeTab, setActiveTab] = useState("openMatches");
   const [selectedDay, setSelectedDay] = useState("");
+  const generateDays = () => {
+    const days = [];
+    const today = new Date();
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      days.push({
+        day: date
+          .toLocaleDateString("en-US", { weekday: "short" })
+          .toUpperCase(),
+        date: date.getDate(),
+        month: date.toLocaleDateString("en-US", { month: "short" }),
+      });
+    }
+    return days;
+  };
   return (
     <ScrollView style={styles.container}>
       <Image
@@ -91,75 +108,31 @@ const MakeMatch = () => {
               backgroundColor: "#f5f5f5",
             }}
           >
-            <Pressable
-              onPress={() => {
-                setSelectedDay("MON");
-              }}
-            >
-              <View style={styles.dayCard}>
-                <Text>MON</Text>
-                <View
-                  style={[
-                    styles.circle,
-                    selectedDay === "MON" && styles.selectedCircle,
-                  ]}
-                >
-                  <Text
-                    style={selectedDay === "MON" ? { color: "white" } : null}
+            {generateDays().map((item) => (
+              <Pressable
+                key={item.date}
+                onPress={() => setSelectedDay(item.day)}
+              >
+                <View style={styles.dayCard}>
+                  <Text>{item.day}</Text>
+                  <View
+                    style={[
+                      styles.circle,
+                      selectedDay === item.day && styles.selectedCircle,
+                    ]}
                   >
-                    09
-                  </Text>
+                    <Text
+                      style={
+                        selectedDay === item.day ? { color: "white" } : null
+                      }
+                    >
+                      {item.date}
+                    </Text>
+                  </View>
+                  <Text>{item.month}</Text>
                 </View>
-
-                <Text>Feb</Text>
-              </View>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                setSelectedDay("TUE");
-              }}
-            >
-              <View style={styles.dayCard}>
-                <Text>TUE</Text>
-                <View
-                  style={[
-                    styles.circle,
-                    selectedDay === "TUE" && styles.selectedCircle,
-                  ]}
-                >
-                  <Text
-                    style={selectedDay === "TUE" ? { color: "white" } : null}
-                  >
-                    10
-                  </Text>
-                </View>
-
-                <Text>Feb</Text>
-              </View>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                setSelectedDay("WED");
-              }}
-            >
-              <View style={styles.dayCard}>
-                <Text>WED</Text>
-                <View
-                  style={[
-                    styles.circle,
-                    selectedDay === "WED" && styles.selectedCircle,
-                  ]}
-                >
-                  <Text
-                    style={selectedDay === "WED" ? { color: "white" } : null}
-                  >
-                    11
-                  </Text>
-                </View>
-
-                <Text>Feb</Text>
-              </View>
-            </Pressable>
+              </Pressable>
+            ))}
           </ScrollView>
         )}
       </View>
