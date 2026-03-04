@@ -15,7 +15,7 @@ const HeaderMatch = () => {
 const styles = StyleSheet.create({
   content: {
     backgroundColor: "#FFF",
-    height: "5%",
+    height: "10%",
     textAlign: "left",
     paddingLeft: 2,
     color: "white",

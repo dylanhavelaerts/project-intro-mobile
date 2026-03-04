@@ -1,4 +1,12 @@
-import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
+import { Link } from "expo-router";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  Pressable,
+} from "react-native";
 
 const Index = () => {
   return (
@@ -12,13 +20,17 @@ const Index = () => {
         </Text>
         <View style={styles.itemContainer}>
           <View style={styles.iconWrapper}>
-            <View style={styles.circleBackground}>
-              <Image
-                source={require("../../assets/images/homepage/court.png")}
-                style={styles.icon}
-              />
-            </View>
-            <Text style={styles.label}>Book a court</Text>
+            <Link href={"/searchMatch/makeMatch"} asChild>
+              <Pressable>
+                <View style={styles.circleBackground}>
+                  <Image
+                    source={require("../../assets/images/homepage/court.png")}
+                    style={styles.icon}
+                  />
+                </View>
+                <Text style={styles.label}>Book a court</Text>
+              </Pressable>
+            </Link>
           </View>
           <View style={styles.iconWrapper}>
             <View style={styles.circleBackground}>

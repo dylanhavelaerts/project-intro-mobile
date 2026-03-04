@@ -83,18 +83,32 @@ const MakeMatch = () => {
         </View>
         {activeTab == "Open Matches" && (
           // Height onderaan een klein beetje aangepast zodat dat er mooier uitzag op mn scherm maar styling moet sws nog verbeterd worden.
-          <ScrollView horizontal style={{ height: "20%" }}>
+          <ScrollView
+            horizontal
+            style={{
+              height: "20%",
+              padding: 10,
+              backgroundColor: "#f5f5f5",
+            }}
+          >
             <Pressable
               onPress={() => {
                 setSelectedDay("MON");
               }}
             >
-              <View>
+              <View style={styles.dayCard}>
                 <Text>MON</Text>
                 <View
-                  style={selectedDay === "MON" ? styles.selectedCircle : null}
+                  style={[
+                    styles.circle,
+                    selectedDay === "MON" && styles.selectedCircle,
+                  ]}
                 >
-                  <Text>09</Text>
+                  <Text
+                    style={selectedDay === "MON" ? { color: "white" } : null}
+                  >
+                    09
+                  </Text>
                 </View>
 
                 <Text>Feb</Text>
@@ -105,12 +119,19 @@ const MakeMatch = () => {
                 setSelectedDay("TUE");
               }}
             >
-              <View>
+              <View style={styles.dayCard}>
                 <Text>TUE</Text>
                 <View
-                  style={selectedDay === "TUE" ? styles.selectedCircle : null}
+                  style={[
+                    styles.circle,
+                    selectedDay === "TUE" && styles.selectedCircle,
+                  ]}
                 >
-                  <Text>10</Text>
+                  <Text
+                    style={selectedDay === "TUE" ? { color: "white" } : null}
+                  >
+                    10
+                  </Text>
                 </View>
 
                 <Text>Feb</Text>
@@ -121,12 +142,19 @@ const MakeMatch = () => {
                 setSelectedDay("WED");
               }}
             >
-              <View>
+              <View style={styles.dayCard}>
                 <Text>WED</Text>
                 <View
-                  style={selectedDay === "WED" ? styles.selectedCircle : null}
+                  style={[
+                    styles.circle,
+                    selectedDay === "WED" && styles.selectedCircle,
+                  ]}
                 >
-                  <Text>11</Text>
+                  <Text
+                    style={selectedDay === "WED" ? { color: "white" } : null}
+                  >
+                    11
+                  </Text>
                 </View>
 
                 <Text>Feb</Text>
@@ -189,20 +217,34 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   tabText: {
-    color: "#666",
+    color: "#a1a1a1",
     fontSize: 14,
     fontWeight: "500",
   },
   activeTab: {
-    backgroundColor: "red",
+    color: "black",
+    borderBottomColor: "black",
+    borderBottomWidth: 1,
   },
   selectedCircle: {
     backgroundColor: "#333",
+
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dayCard: {
+    alignItems: "center",
+    marginHorizontal: 10,
+  },
+  circle: {
+    backgroundColor: "#fff",
     borderRadius: 50,
     width: 35,
     height: 35,
     alignItems: "center",
     justifyContent: "center",
+    borderColor: "black",
+    borderWidth: 0.5,
   },
 });
 
