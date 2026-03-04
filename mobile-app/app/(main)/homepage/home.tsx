@@ -67,8 +67,10 @@ const Index = () => {
         </Text>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.titleText}>Activities</Text>
+      <View style={styles.sectionActivities}>
+        <Text style={[styles.titleText, styles.activitiesTitle]}>
+          Activities
+        </Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -183,7 +185,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.5,
     borderBottomColor: "#E5E7EB",
   },
+  sectionActivities: {
+    marginBottom: 20,
+  },
+  activitiesTitle: {
+    paddingHorizontal: 15,
+  },
   horizontalScrollPadding: {
+    paddingLeft: 15,
     paddingRight: 20,
     gap: 12,
   },
