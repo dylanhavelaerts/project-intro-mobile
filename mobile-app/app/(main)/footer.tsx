@@ -6,7 +6,7 @@ const Footer = () => {
       <View style={styles.menuContainer}>
         <View style={styles.itemWrapper}>
           <Image
-            source={require("../assets/images/homepage/home.png")}
+            source={require("../../assets/images/homepage/home.png")}
             style={styles.icon}
           />
           <Text style={styles.menuText}>Home</Text>
@@ -14,7 +14,7 @@ const Footer = () => {
 
         <View style={styles.itemWrapper}>
           <Image
-            source={require("../assets/images/homepage/group.png")}
+            source={require("../../assets/images/homepage/group.png")}
             style={styles.icon}
           />
           <Text style={styles.menuText}>Community</Text>
@@ -22,7 +22,7 @@ const Footer = () => {
 
         <View style={styles.itemWrapper}>
           <Image
-            source={require("../assets/images/homepage/profile.png")}
+            source={require("../../assets/images/homepage/profile.png")}
             style={styles.icon}
           />
           <Text style={styles.menuText}>Profile</Text>

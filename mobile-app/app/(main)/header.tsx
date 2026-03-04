@@ -7,11 +7,11 @@ const Header = () => {
 
       <View style={styles.menuContainer}>
         <Image
-          source={require("../assets/images/homepage/bell.png")}
+          source={require("../../assets/images/homepage/bell.png")}
           style={styles.icon}
         />
         <Image
-          source={require("../assets/images/homepage/menu-burger.png")}
+          source={require("../../assets/images/homepage/menu-burger.png")}
           style={styles.icon}
         />
       </View>

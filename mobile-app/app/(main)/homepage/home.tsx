@@ -5,7 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   Image,
-  Pressable,
+  TouchableOpacity,
 } from "react-native";
 
 const Index = () => {
@@ -19,23 +19,21 @@ const Index = () => {
           The court is calling your name, user
         </Text>
         <View style={styles.itemContainer}>
-          <View style={styles.iconWrapper}>
-            <Link href={"/searchMatch/makeMatch"} asChild>
-              <Pressable>
-                <View style={styles.circleBackground}>
-                  <Image
-                    source={require("../../assets/images/homepage/court.png")}
-                    style={styles.icon}
-                  />
-                </View>
-                <Text style={styles.label}>Book a court</Text>
-              </Pressable>
-            </Link>
-          </View>
+          <Link href="/(noHeaders)/bookCourt" asChild>
+            <TouchableOpacity style={styles.iconWrapper}>
+              <View style={styles.circleBackground}>
+                <Image
+                  source={require("../../../assets/images/homepage/court.png")}
+                  style={styles.icon}
+                />
+              </View>
+              <Text style={styles.label}>Book a court</Text>
+            </TouchableOpacity>
+          </Link>
           <View style={styles.iconWrapper}>
             <View style={styles.circleBackground}>
               <Image
-                source={require("../../assets/images/homepage/learn.png")}
+                source={require("../../../assets/images/homepage/learn.png")}
                 style={styles.icon}
               />
             </View>
@@ -44,7 +42,7 @@ const Index = () => {
           <View style={styles.iconWrapper}>
             <View style={styles.circleBackground}>
               <Image
-                source={require("../../assets/images/homepage/compete.png")}
+                source={require("../../../assets/images/homepage/compete.png")}
                 style={styles.icon}
               />
             </View>
@@ -53,7 +51,7 @@ const Index = () => {
           <View style={styles.iconWrapper}>
             <View style={styles.circleBackground}>
               <Image
-                source={require("../../assets/images/homepage/tennis-ball.png")}
+                source={require("../../../assets/images/homepage/tennis-ball.png")}
                 style={styles.icon}
               />
             </View>
@@ -69,8 +67,10 @@ const Index = () => {
         </Text>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.titleText}>Activities</Text>
+      <View style={styles.sectionActivities}>
+        <Text style={[styles.titleText, styles.activitiesTitle]}>
+          Activities
+        </Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -78,7 +78,7 @@ const Index = () => {
         >
           <View style={styles.activityCard}>
             <Image
-              source={require("../../assets/images/homepage/private-class.png")}
+              source={require("../../../assets/images/homepage/private-class.png")}
               style={styles.cardIcon}
             />
             <View style={styles.cardTextContainer}>
@@ -88,7 +88,7 @@ const Index = () => {
 
           <View style={styles.activityCard}>
             <Image
-              source={require("../../assets/images/homepage/public.png")}
+              source={require("../../../assets/images/homepage/public.png")}
               style={styles.cardIcon}
             />
             <View style={styles.cardTextContainer}>
@@ -98,7 +98,7 @@ const Index = () => {
 
           <View style={styles.activityCard}>
             <Image
-              source={require("../../assets/images/homepage/courses.png")}
+              source={require("../../../assets/images/homepage/courses.png")}
               style={styles.cardIcon}
             />
             <View style={styles.cardTextContainer}>
@@ -185,7 +185,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.5,
     borderBottomColor: "#E5E7EB",
   },
+  sectionActivities: {
+    marginBottom: 20,
+  },
+  activitiesTitle: {
+    paddingHorizontal: 15,
+  },
   horizontalScrollPadding: {
+    paddingLeft: 15,
     paddingRight: 20,
     gap: 12,
   },

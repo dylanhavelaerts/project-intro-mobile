@@ -26,10 +26,14 @@ const styles = StyleSheet.create({
     height: "10%",
     textAlign: "left",
     paddingLeft: 2,
-    color: "white",
     display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
+  },
+  backArrow: {
+    fontSize: 20,
+    margin: 20,
+    marginBottom: 40,
   },
   icon: {
     width: 24,
