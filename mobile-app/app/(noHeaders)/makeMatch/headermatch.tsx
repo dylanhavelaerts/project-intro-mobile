@@ -6,7 +6,7 @@ const HeaderMatch = () => {
 
   return (
     <View style={styles.content}>
-      <Pressable onPress={() => router.push("/homepage/home")}>
+      <Pressable onPress={() => router.back()}>
         <Image
           source={require("@/assets/images/bookCourt/back.png")}
           style={styles.icon}

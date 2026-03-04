@@ -1,19 +1,12 @@
-import { Slot } from "expo-router";
-import { View, StyleSheet } from "react-native";
+import { Stack } from "expo-router";
 
 const NoHeadersLayout = () => {
   return (
-    <View style={styles.container}>
-      <Slot />
-    </View>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="bookCourt" />
+      <Stack.Screen name="makeMatch" />
+    </Stack>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "white",
-  },
-});
 
 export default NoHeadersLayout;
