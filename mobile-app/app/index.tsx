@@ -14,8 +14,8 @@ const Index = () => {
         <Button title="Home" />
       </Link>
 
-      <Link href="/(noHeaders)/login" asChild>
-        <Button title="Login" />
+      <Link href="/(noHeaders)/welcome" asChild>
+        <Button title="Welcome" />
       </Link>
     </View>
   );

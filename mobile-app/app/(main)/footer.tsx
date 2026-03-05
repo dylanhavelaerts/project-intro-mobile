@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, Pressable } from "react-native";
 
 const Footer = () => {
   return (
@@ -21,15 +21,13 @@ const Footer = () => {
           <Text style={styles.menuText}>Community</Text>
         </View>
 
-        <View style={styles.itemWrapper}>
-          <TouchableOpacity onPress={() => router.push("/")}>
-            <Image
-              source={require("../../assets/images/homepage/profile.png")}
-              style={styles.icon}
-            />
-            <Text style={styles.menuText}>Profile</Text>
-          </TouchableOpacity>
-        </View>
+        <Pressable style={styles.itemWrapper} onPress={() => router.push("/")}>
+          <Image
+            source={require("../../assets/images/homepage/profile.png")}
+            style={styles.icon}
+          />
+          <Text style={styles.menuText}>Profile</Text>
+        </Pressable>
       </View>
     </View>
   );
