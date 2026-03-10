@@ -13,6 +13,10 @@ const Index = () => {
       <Link href="/homepage/home" asChild>
         <Button title="Home" />
       </Link>
+
+      <Link href="/(noHeaders)/welcome" asChild>
+        <Button title="Welcome" />
+      </Link>
     </View>
   );
 };
