@@ -99,8 +99,10 @@ const BookCourt = () => {
       </View>
 
       <View style={styles.courtSection}>
-        <TouchableOpacity>
-          <Button>placeholder</Button>
+        <TouchableOpacity onPress={() => router.push("/(noHeaders)/makeMatch")}>
+          <View style={{ padding: 10, backgroundColor: 'blue' }}>
+            <Text style={{ color: 'white' }}>placeholder</Text>
+          </View>
         </TouchableOpacity>
       </View>
     </View>

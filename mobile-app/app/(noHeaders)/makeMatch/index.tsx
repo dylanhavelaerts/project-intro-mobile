@@ -98,7 +98,6 @@ const MakeMatch = () => {
               Open Matches
             </Text>
           </Pressable>
-
           <Pressable
             onPress={() => {
               setActiveTab("Competitions");
