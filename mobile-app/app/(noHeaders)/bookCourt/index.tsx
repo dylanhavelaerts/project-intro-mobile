@@ -1,5 +1,4 @@
-import { Button } from "@react-navigation/elements";
-import { Link, router } from "expo-router";
+import { router } from "expo-router";
 import { useState } from "react";
 import {
   View,
@@ -8,12 +7,50 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
+import CourtCard, { CourtData } from "../../../components/CourtCard";
+
+// Placeholder court data
+const PLACEHOLDER_COURTS: CourtData[] = [
+  {
+    id: "1",
+    name: "GARRINCHA Antwerpen Noord",
+    image: require("../../../assets/resources/padelvenuetero.jpg"),
+    price: "€ 28",
+    duration: "1h",
+    distance: "2km",
+    location: "Antwerpen Antwerpen",
+    timeSlots: ["22:30", "23:00", "23:30"],
+  },
+  {
+    id: "2",
+    name: "Padelland Indoor Linkeroever",
+    image: require("../../../assets/resources/padelvenuetero.jpg"),
+    price: "€ 21",
+    duration: "1h",
+    distance: "4km",
+    location: "Antwerpen Antwerpen",
+    timeSlots: ["17:00", "17:30", "18:00", "20:00", "20:30", "21:30"],
+  },
+];
 
 const BookCourt = () => {
   const [activeIcon, setActiveIcon] = useState<"location" | "heart">(
     "location",
   );
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+
+  const toggleFavorite = (id: string) => {
+    setFavoriteIds((prev) =>
+      prev.includes(id) ? prev.filter((fId) => fId !== id) : [...prev, id],
+    );
+  };
+
+  const courtsToShow = PLACEHOLDER_COURTS.map((court) => ({
+    ...court,
+    isFavorite: favoriteIds.includes(court.id),
+  })).filter((court) => (activeIcon === "heart" ? court.isFavorite : true));
 
   return (
     <View style={styles.container}>
@@ -98,13 +135,28 @@ const BookCourt = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.courtSection}>
-        <TouchableOpacity
-          onPress={() => router.push("/(noHeaders)/makeMatch" as any)}
-        >
-          <Text>placeholder</Text>
-        </TouchableOpacity>
-      </View>
+      <ScrollView
+        style={styles.courtSection}
+        contentContainerStyle={styles.courtSectionContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {courtsToShow.length > 0 ? (
+          courtsToShow.map((court) => (
+            <CourtCard
+              key={court.id}
+              court={court}
+              onToggleFavorite={toggleFavorite}
+            />
+          ))
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>No favorites yet</Text>
+            <Text style={styles.emptyStateSubtext}>
+              Tap the heart on a court to add it to your favorites
+            </Text>
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 };
@@ -211,8 +263,26 @@ const styles = StyleSheet.create({
   },
   courtSection: {
     flex: 1,
-    padding: 10,
-    marginTop: 15,
+    marginTop: 10,
+  },
+  courtSectionContent: {
+    paddingBottom: 30,
+  },
+  emptyState: {
+    alignItems: "center",
+    paddingTop: 60,
+    paddingHorizontal: 40,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#0d2432",
+    marginBottom: 8,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: "#6b7280",
+    textAlign: "center",
   },
 });
 
