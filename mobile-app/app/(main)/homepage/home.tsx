@@ -1,4 +1,5 @@
 import { Link } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,8 +8,25 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
+import { auth, db } from "@/config/firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
 
 const Index = () => {
+  const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    const fetchUsername = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          setUsername(userDoc.data().username);
+        }
+      }
+    };
+    fetchUsername();
+  }, []);
+
   return (
     <ScrollView
       style={styles.container}
@@ -16,7 +34,7 @@ const Index = () => {
     >
       <View style={styles.section1}>
         <Text style={[styles.titleText, styles.topMargin]}>
-          The court is calling your name, user
+          The court is calling your name, {username}
         </Text>
         <View style={styles.itemContainer}>
           <Link href="/(noHeaders)/bookCourt" asChild>
@@ -48,15 +66,19 @@ const Index = () => {
             </View>
             <Text style={styles.label}>Compete</Text>
           </View>
-          <View style={styles.iconWrapper}>
-            <View style={styles.circleBackground}>
-              <Image
-                source={require("../../../assets/images/homepage/tennis-ball.png")}
-                style={styles.icon}
-              />
-            </View>
-            <Text style={styles.label}>Find a match</Text>
-          </View>
+          <Link href="/(noHeaders)/findMatch" asChild>
+            <TouchableOpacity>
+              <View style={styles.iconWrapper}>
+                <View style={styles.circleBackground}>
+                  <Image
+                    source={require("../../../assets/images/homepage/tennis-ball.png")}
+                    style={styles.icon}
+                  />
+                </View>
+                <Text style={styles.label}>Find a match</Text>
+              </View>
+            </TouchableOpacity>
+          </Link>
         </View>
       </View>
 
