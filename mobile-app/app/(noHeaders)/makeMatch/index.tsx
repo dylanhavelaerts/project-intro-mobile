@@ -49,7 +49,6 @@ const MakeMatch = () => {
       <Image
         source={require("@/assets/resources/padelvenuetero.jpg")}
         style={styles.padelvenue}
-        resizeMode="cover"
       />
       <View style={styles.totalaboveview}>
         <View style={styles.viewstyle}>

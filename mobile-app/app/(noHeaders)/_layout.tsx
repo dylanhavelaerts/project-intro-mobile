@@ -5,6 +5,7 @@ const NoHeadersLayout = () => {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="bookCourt" />
       <Stack.Screen name="makeMatch" />
+      <Stack.Screen name="seedCourts" />
     </Stack>
   );
 };

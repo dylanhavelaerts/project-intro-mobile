@@ -122,6 +122,12 @@ const Index = () => {
         <Text style={styles.titleText}>Compete with others</Text>
         <Text style={styles.itemText}>Open matches</Text>
       </View>
+
+      <Link href="/(noHeaders)/seedCourts" asChild>
+        <TouchableOpacity style={styles.seedButton}>
+          <Text style={styles.seedButtonText}>🌱 Seed DB (temp)</Text>
+        </TouchableOpacity>
+      </Link>
     </ScrollView>
   );
 };
@@ -221,6 +227,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#040b27",
     flexShrink: 1,
+  },
+  seedButton: {
+    backgroundColor: "#4CAF50",
+    margin: 20,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  seedButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 15,
   },
 });
 
