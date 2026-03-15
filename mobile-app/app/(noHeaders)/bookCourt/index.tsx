@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Image,
@@ -8,38 +8,72 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import CourtCard, { CourtData } from "../../../components/CourtCard";
-
-// Placeholder court data
-const PLACEHOLDER_COURTS: CourtData[] = [
-  {
-    id: "1",
-    name: "GARRINCHA Antwerpen Noord",
-    image: require("../../../assets/resources/padelvenuetero.jpg"),
-    price: "€ 28",
-    duration: "1h",
-    distance: "2km",
-    location: "Antwerpen Antwerpen",
-    timeSlots: ["22:30", "23:00", "23:30"],
-  },
-  {
-    id: "2",
-    name: "Padelland Indoor Linkeroever",
-    image: require("../../../assets/resources/padelvenuetero.jpg"),
-    price: "€ 21",
-    duration: "1h",
-    distance: "4km",
-    location: "Antwerpen Antwerpen",
-    timeSlots: ["17:00", "17:30", "18:00", "20:00", "20:30", "21:30"],
-  },
-];
+import { db } from "@/config/firebaseConfig";
+import { collection, getDocs } from "firebase/firestore";
 
 const BookCourt = () => {
   const [activeIcon, setActiveIcon] = useState<"location" | "heart">(
     "location",
   );
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [courts, setCourts] = useState<CourtData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [locSnap, courtsSnap] = await Promise.all([
+          getDocs(collection(db, "locations")),
+          getDocs(collection(db, "courts")),
+        ]);
+
+        const courtsByLocation: Record<
+          string,
+          { pricePerSlot: number; slotDurationMinutes: number }[]
+        > = {};
+        courtsSnap.forEach((doc) => {
+          const d = doc.data();
+          if (!courtsByLocation[d.locationId])
+            courtsByLocation[d.locationId] = [];
+          courtsByLocation[d.locationId].push(d as any);
+        });
+
+        const mapped: CourtData[] = locSnap.docs.map((doc) => {
+          const loc = doc.data();
+          const locCourts = courtsByLocation[doc.id] ?? [];
+          const minPrice =
+            locCourts.length > 0
+              ? Math.min(...locCourts.map((c) => c.pricePerSlot))
+              : 0;
+          const duration = locCourts[0]?.slotDurationMinutes
+            ? `${locCourts[0].slotDurationMinutes}min`
+            : "90min";
+
+          return {
+            id: doc.id,
+            name: loc.name,
+            image: { uri: loc.imageUrl },
+            price: `€ ${minPrice}`,
+            duration,
+            distance: loc.city,
+            location: `${loc.address}, ${loc.city}`,
+            timeSlots: [],
+          };
+        });
+
+        setCourts(mapped);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const toggleFavorite = (id: string) => {
     setFavoriteIds((prev) =>
@@ -47,10 +81,17 @@ const BookCourt = () => {
     );
   };
 
-  const courtsToShow = PLACEHOLDER_COURTS.map((court) => ({
-    ...court,
-    isFavorite: favoriteIds.includes(court.id),
-  })).filter((court) => (activeIcon === "heart" ? court.isFavorite : true));
+  const courtsToShow = courts
+    .map((court) => ({ ...court, isFavorite: favoriteIds.includes(court.id) }))
+    .filter((court) => (activeIcon === "heart" ? court.isFavorite : true));
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -142,11 +183,15 @@ const BookCourt = () => {
       >
         {courtsToShow.length > 0 ? (
           courtsToShow.map((court) => (
-            <CourtCard
+            <TouchableOpacity
               key={court.id}
-              court={court}
-              onToggleFavorite={toggleFavorite}
-            />
+              activeOpacity={0.9}
+              onPress={() =>
+                router.push(`/(noHeaders)/makeMatch/${court.id}` as any)
+              }
+            >
+              <CourtCard court={court} onToggleFavorite={toggleFavorite} />
+            </TouchableOpacity>
           ))
         ) : (
           <View style={styles.emptyState}>

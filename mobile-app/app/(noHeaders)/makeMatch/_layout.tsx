@@ -8,6 +8,7 @@ const makeMatchLayout = () => {
       <HeaderMatch></HeaderMatch>
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="[locationId]" options={{ headerShown: false }} />
       </Stack>
     </View>
   );

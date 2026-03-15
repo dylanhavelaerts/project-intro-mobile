@@ -13,6 +13,7 @@ import {
 
 const { width } = Dimensions.get("window");
 
+// This one can lowkenuily go maar kga em nogniet verwijderen.
 const MakeMatch = () => {
   const [activeTab, setActiveTab] = useState("openMatches");
   const [selectedDay, setSelectedDay] = useState("");
