@@ -10,6 +10,7 @@ import {
   Switch,
   ActivityIndicator,
   Alert,
+  TextInput,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import {
@@ -42,6 +43,29 @@ type Booking = {
 
   durationMinutes: 60 | 90 | 120;
   status: "confirmed" | "cancelled";
+};
+type MatchDoc = {
+  id: string;
+  locationId: string;
+  courtId: string | null;
+
+  dateKey: string; // YYYY-MM-DD (local)
+  startMinute: number;
+  durationMinutes: 60 | 90 | 120;
+
+  createdBy: string;
+  players: string[]; // uids (creator included)
+
+  levelMin: number;
+  levelMax: number;
+
+  mixed: boolean;
+  competitive: boolean;
+
+  status: "open" | "full" | "completed" | "cancelled";
+  pricePerPlayer: number;
+
+  createdAt?: any;
 };
 
 const pad2 = (n: number) => (n < 10 ? `0${n}` : String(n));
@@ -114,6 +138,16 @@ export default function VenueMakeMatch() {
   const [timeSlots, setTimeSlots] = useState<string[]>([]);
   const [selectedTime, setSelectedTime] = useState<string>("");
 
+  // OPEN MATCHES (venue matches list)
+  const [matches, setMatches] = useState<MatchDoc[]>([]);
+  const [matchesLoading, setMatchesLoading] = useState(false);
+
+  // CREATE MATCH (simple inline form)
+  const [showCreateMatch, setShowCreateMatch] = useState(false);
+  const [levelMin, setLevelMin] = useState("1.0");
+  const [levelMax, setLevelMax] = useState("3.0");
+  const [mixed, setMixed] = useState(false);
+  const [competitive, setCompetitive] = useState(false);
   // ------------------------------------------------------------
   // DATA STATE
   // ------------------------------------------------------------
@@ -243,9 +277,36 @@ export default function VenueMakeMatch() {
     setBookings(mapped);
     return mapped;
   };
+  const fetchMatchesForDay = async () => {
+    if (!locationId) return [];
+
+    setMatchesLoading(true);
+
+    try {
+      const snap = await getDocs(
+        query(
+          collection(db, "matches"),
+          where("locationId", "==", locationId),
+          where("dateKey", "==", dateKey),
+          where("status", "==", "open"),
+        ),
+      );
+
+      const mapped: MatchDoc[] = snap.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as any),
+      }));
+
+      setMatches(mapped);
+      return mapped;
+    } finally {
+      setMatchesLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchBookingsForDay().catch((e) => Alert.alert("Error", String(e)));
+    fetchMatchesForDay().catch((e) => Alert.alert("Error", String(e)));
     // Intentionally only depends on venue + day.
   }, [locationId, dateKey]);
 
@@ -342,6 +403,72 @@ export default function VenueMakeMatch() {
       setBookingBusy(false);
     }
   };
+  const handleCreateMatch = async () => {
+    if (!locationId) return;
+
+    const startMinute = getSelectedStartMinute();
+    if (startMinute == null) {
+      Alert.alert("Pick a time", "Please select a start time first.");
+      return;
+    }
+
+    const min = Number(levelMin.replace(",", "."));
+    const max = Number(levelMax.replace(",", "."));
+
+    if (!Number.isFinite(min) || !Number.isFinite(max)) {
+      Alert.alert("Invalid level range", "Enter valid numbers for min/max.");
+      return;
+    }
+    if (min > max) {
+      Alert.alert("Invalid level range", "Min level must be ≤ max level.");
+      return;
+    }
+
+    try {
+      setBookingBusy(true); // reuse busy flag to block double taps
+
+      const userId = auth.currentUser?.uid ?? "anonymous";
+
+      // Simple simulated price (you can change the formula later)
+      const pricePerPlayer =
+        durationMinutes === 60 ? 6 : durationMinutes === 90 ? 8 : 10;
+
+      await addDoc(collection(db, "matches"), {
+        locationId,
+        courtId: null,
+
+        dateKey,
+        startMinute,
+        durationMinutes,
+
+        createdBy: userId,
+        players: [userId],
+
+        levelMin: min,
+        levelMax: max,
+
+        mixed,
+        competitive,
+
+        status: "open",
+        pricePerPlayer,
+
+        createdAt: serverTimestamp(),
+      });
+
+      setShowCreateMatch(false);
+      await fetchMatchesForDay();
+
+      Alert.alert(
+        "Match created",
+        "Your match is now visible in Open Matches.",
+      );
+    } catch (e) {
+      Alert.alert("Error", String(e));
+    } finally {
+      setBookingBusy(false);
+    }
+  };
 
   // ------------------------------------------------------------
   // RENDER
@@ -375,7 +502,6 @@ export default function VenueMakeMatch() {
             </Text>
           </View>
 
-          {/* Placeholder favourite UI (not wired yet) */}
           <Text style={{ fontSize: 20 }}>♡</Text>
         </View>
 
@@ -555,6 +681,226 @@ export default function VenueMakeMatch() {
                   </Pressable>
                 );
               })}
+            </View>
+          </View>
+        )}
+        {activeTab == "Open Matches" && (
+          <View style={{ backgroundColor: "#f5f5f5" }}>
+            {/* Reuse same day + toggle + duration + times UI if you want.
+        MVP: reuse the same selectedDate/selectedTime/durationMinutes state. */}
+
+            <ScrollView horizontal style={{ padding: 10 }}>
+              {generateDays().map((item) => (
+                <Pressable
+                  key={toDateKeyLocal(item.fullDate)}
+                  onPress={() => setSelectedDate(item.fullDate)}
+                >
+                  <View style={styles.dayCard}>
+                    <Text>{item.day}</Text>
+                    <View
+                      style={[
+                        styles.circle,
+                        toDateKeyLocal(item.fullDate) === dateKey &&
+                          styles.selectedCircle,
+                      ]}
+                    >
+                      <Text
+                        style={
+                          toDateKeyLocal(item.fullDate) === dateKey
+                            ? { color: "white" }
+                            : undefined
+                        }
+                      >
+                        {item.date}
+                      </Text>
+                    </View>
+                    <Text>{item.month}</Text>
+                  </View>
+                </Pressable>
+              ))}
+            </ScrollView>
+
+            <View style={styles.toggleRow}>
+              <Text>Show available matches only</Text>
+              <Switch value={showAvailable} onValueChange={setShowAvailable} />
+            </View>
+
+            <View style={styles.durationRow}>
+              {[60, 90, 120].map((d) => {
+                const selected = durationMinutes === d;
+                return (
+                  <Pressable
+                    key={d}
+                    onPress={() => setDurationMinutes(d as 60 | 90 | 120)}
+                    style={[
+                      styles.durationPill,
+                      selected && styles.durationPillSelected,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.durationText,
+                        selected && styles.durationTextSelected,
+                      ]}
+                    >
+                      {d}min
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <ScrollView horizontal style={styles.timeSlotsContainer}>
+              {timeSlots.map((slot) => {
+                const selected = selectedTime === slot;
+                return (
+                  <Pressable
+                    key={slot}
+                    onPress={() => setSelectedTime(slot)}
+                    style={[
+                      styles.timeSlot,
+                      selected && styles.timeSlotSelected,
+                    ]}
+                  >
+                    <Text style={selected ? { color: "white" } : undefined}>
+                      {slot}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            <View style={styles.courtsBlock}>
+              <Pressable
+                onPress={() => setShowCreateMatch((p) => !p)}
+                style={[styles.courtRow, { justifyContent: "center" }]}
+              >
+                <Text style={{ fontWeight: "700", color: "#0d2432" }}>
+                  {showCreateMatch ? "Close" : "+ Create match"}
+                </Text>
+              </Pressable>
+
+              {showCreateMatch && (
+                <View
+                  style={[
+                    styles.courtRow,
+                    { flexDirection: "column", gap: 10 },
+                  ]}
+                >
+                  <Text style={{ fontWeight: "700" }}>Match settings</Text>
+
+                  <View style={{ flexDirection: "row", gap: 10 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text>Level min</Text>
+                      <TextInput
+                        value={levelMin}
+                        onChangeText={setLevelMin}
+                        keyboardType="decimal-pad"
+                        style={{
+                          borderWidth: 1,
+                          borderColor: "#ddd",
+                          borderRadius: 8,
+                          padding: 10,
+                        }}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text>Level max</Text>
+                      <TextInput
+                        value={levelMax}
+                        onChangeText={setLevelMax}
+                        keyboardType="decimal-pad"
+                        style={{
+                          borderWidth: 1,
+                          borderColor: "#ddd",
+                          borderRadius: 8,
+                          padding: 10,
+                        }}
+                      />
+                    </View>
+                  </View>
+
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text>Mixed</Text>
+                    <Switch value={mixed} onValueChange={setMixed} />
+                  </View>
+
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text>Competitive</Text>
+                    <Switch
+                      value={competitive}
+                      onValueChange={setCompetitive}
+                    />
+                  </View>
+
+                  <Pressable
+                    disabled={bookingBusy}
+                    onPress={handleCreateMatch}
+                    style={[
+                      styles.timeSlot,
+                      {
+                        alignSelf: "stretch",
+                        marginRight: 0,
+                        backgroundColor: "#0d2432",
+                        borderColor: "#0d2432",
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        color: "white",
+                        textAlign: "center",
+                        fontWeight: "700",
+                      }}
+                    >
+                      Create match
+                    </Text>
+                  </Pressable>
+                </View>
+              )}
+
+              {matchesLoading ? (
+                <View style={{ padding: 16 }}>
+                  <ActivityIndicator />
+                </View>
+              ) : (
+                (showAvailable
+                  ? matches.filter((m) => (m.players?.length ?? 0) < 4)
+                  : matches
+                ).map((m) => (
+                  <View key={m.id} style={styles.courtRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.courtName}>
+                        {minutesToHHMM(m.startMinute)} · Level {m.levelMin} -{" "}
+                        {m.levelMax}
+                      </Text>
+                      <Text style={styles.courtMeta}>
+                        Players: {m.players?.length ?? 0}/4 ·{" "}
+                        {m.mixed ? "Mixed" : "Not mixed"} ·{" "}
+                        {m.competitive ? "Competitive" : "Friendly"}
+                      </Text>
+                    </View>
+                    <View style={{ alignItems: "flex-end" }}>
+                      <Text style={styles.courtPrice}>
+                        € {Number(m.pricePerPlayer).toFixed(2)}
+                      </Text>
+                      <Text style={styles.courtStatus}>Open</Text>
+                    </View>
+                  </View>
+                ))
+              )}
             </View>
           </View>
         )}
