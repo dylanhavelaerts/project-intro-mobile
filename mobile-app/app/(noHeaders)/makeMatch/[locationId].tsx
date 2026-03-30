@@ -12,7 +12,7 @@ import {
   Alert,
   TextInput,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   addDoc,
   collection,
@@ -22,6 +22,8 @@ import {
   query,
   serverTimestamp,
   where,
+  arrayUnion,
+  updateDoc,
 } from "firebase/firestore";
 import { auth, db } from "@/config/firebaseConfig";
 import type { Court, Location } from "@/types";
@@ -55,6 +57,7 @@ type MatchDoc = {
 
   createdBy: string;
   players: string[]; // uids (creator included)
+  playerNames: string[]; // denormalized player names for easy access in the list
 
   levelMin: number;
   levelMax: number;
@@ -156,6 +159,7 @@ export default function VenueMakeMatch() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [bookingBusy, setBookingBusy] = useState(false);
+  const router = useRouter();
 
   const dateKey = toDateKeyLocal(selectedDate);
 
@@ -429,6 +433,10 @@ export default function VenueMakeMatch() {
 
       const userId = auth.currentUser?.uid ?? "anonymous";
 
+      // Fetch the creator's display name from Firestore
+      const userSnap = await getDoc(doc(db, "users", userId));
+      const userName = userSnap.data()?.username ?? "Unknown";
+
       // Simple simulated price (you can change the formula later)
       const pricePerPlayer =
         durationMinutes === 60 ? 6 : durationMinutes === 90 ? 8 : 10;
@@ -443,6 +451,7 @@ export default function VenueMakeMatch() {
 
         createdBy: userId,
         players: [userId],
+        playerNames: [userName], // store the creator's name for easy access in the list
 
         levelMin: min,
         levelMax: max,
@@ -463,6 +472,50 @@ export default function VenueMakeMatch() {
         "Match created",
         "Your match is now visible in Open Matches.",
       );
+    } catch (e) {
+      Alert.alert("Error", String(e));
+    } finally {
+      setBookingBusy(false);
+    }
+  };
+  const handleJoinMatch = async (matchId: string) => {
+    const userId = auth.currentUser?.uid ?? "anonymous";
+
+    try {
+      setBookingBusy(true);
+
+      // Fetch current user's name
+      const userSnap = await getDoc(doc(db, "users", userId));
+      const userName = userSnap.data()?.name ?? "Unknown";
+
+      const matchRef = doc(db, "matches", matchId);
+      const matchSnap = await getDoc(matchRef);
+      const matchData = matchSnap.data();
+
+      if (!matchData) {
+        Alert.alert("Error", "Match not found.");
+        return;
+      }
+
+      if (matchData.players?.includes(userId)) {
+        Alert.alert("Already joined", "You are already in this match.");
+        return;
+      }
+
+      if ((matchData.players?.length ?? 0) >= 4) {
+        Alert.alert("Match full", "This match is already full.");
+        return;
+      }
+
+      await updateDoc(matchRef, {
+        players: arrayUnion(userId),
+        playerNames: arrayUnion(userName),
+        // Mark as full if this is the 4th player
+        status: matchData.players?.length === 3 ? "full" : "open",
+      });
+
+      await fetchMatchesForDay();
+      Alert.alert("Joined!", "You have joined the match.");
     } catch (e) {
       Alert.alert("Error", String(e));
     } finally {
@@ -891,6 +944,47 @@ export default function VenueMakeMatch() {
                         {m.mixed ? "Mixed" : "Not mixed"} ·{" "}
                         {m.competitive ? "Competitive" : "Friendly"}
                       </Text>
+                      {m.players?.includes(auth.currentUser?.uid ?? "") ? (
+                        // User is in this match → show Submit Result
+                        <Pressable
+                          onPress={() =>
+                            router.push({
+                              pathname: "/(noHeaders)/makeMatch/submitResult",
+                              params: {
+                                player1Id: m.players[0],
+                                player1Name: m.playerNames?.[0] ?? "Player 1",
+                                player2Id: m.players[1] ?? m.players[0],
+                                player2Name: m.playerNames?.[1] ?? "Player 2",
+                                matchId: m.id,
+                              },
+                            })
+                          }
+                          style={styles.submitBtn}
+                        >
+                          <Text style={styles.submitBtnText}>
+                            Submit Result
+                          </Text>
+                        </Pressable>
+                      ) : (
+                        // User is not in this match → show Join
+                        <Pressable
+                          disabled={
+                            bookingBusy || (m.players?.length ?? 0) >= 4
+                          }
+                          onPress={() => handleJoinMatch(m.id)}
+                          style={[
+                            styles.submitBtn,
+                            { backgroundColor: "#16a34a" },
+                            (m.players?.length ?? 0) >= 4 && {
+                              backgroundColor: "#9ca3af",
+                            },
+                          ]}
+                        >
+                          <Text style={styles.submitBtnText}>
+                            {(m.players?.length ?? 0) >= 4 ? "Full" : "Join"}
+                          </Text>
+                        </Pressable>
+                      )}
                     </View>
                     <View style={{ alignItems: "flex-end" }}>
                       <Text style={styles.courtPrice}>
@@ -1081,5 +1175,18 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 12,
     color: "#6b7280",
+  },
+  submitBtn: {
+    marginTop: 8,
+    backgroundColor: "#2563eb",
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    alignSelf: "flex-start",
+  },
+  submitBtnText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 12,
   },
 });
