@@ -951,13 +951,15 @@ export default function VenueMakeMatch() {
                         <Pressable
                           onPress={() =>
                             router.push({
-                              pathname: "/(noHeaders)/makeMatch/submitResult",
+                              pathname: "/makeMatch/[locationId]",
                               params: {
+                                locationId: locationId,
+                                matchId: m.id,
                                 player1Id: m.players[0],
                                 player1Name: m.playerNames?.[0] ?? "Player 1",
                                 player2Id: m.players[1] ?? m.players[0],
                                 player2Name: m.playerNames?.[1] ?? "Player 2",
-                                matchId: m.id,
+                                competitive: String(m.competitive), // ← add this
                               },
                             })
                           }

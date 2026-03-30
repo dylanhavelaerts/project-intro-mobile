@@ -2,33 +2,95 @@ import { useState } from "react";
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
+  ScrollView,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { recordMatchResult } from "../../../config/rating";
+import {
+  recordMatchResult,
+  determineWinner,
+  isValidSet,
+} from "../../../config/rating";
+import type { SetScore } from "../../../config/rating";
+
+const EMPTY_SET: SetScore = { team1: 0, team2: 0 };
 
 export default function SubmitResultScreen() {
   const router = useRouter();
-  const { player1Id, player1Name, player2Id, player2Name, matchId } =
-    useLocalSearchParams<{
-      player1Id: string;
-      player1Name: string;
-      player2Id: string;
-      player2Name: string;
-      matchId?: string;
-    }>();
+  const {
+    player1Id,
+    player1Name,
+    player2Id,
+    player2Name,
+    matchId,
+    competitive,
+  } = useLocalSearchParams<{
+    player1Id: string;
+    player1Name: string;
+    player2Id: string;
+    player2Name: string;
+    matchId: string;
+    competitive: string; // route params are always strings
+  }>();
+
+  const isCompetitive = competitive === "true";
+
+  // Up to 3 sets, start with 2 visible
+  const [sets, setSets] = useState<SetScore[]>([
+    { ...EMPTY_SET },
+    { ...EMPTY_SET },
+  ]);
 
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [winner, setWinner] = useState<string | null>(null);
 
-  async function handleSelectWinner(winnerId: string, loserId: string) {
-    setLoading(true);
+  const updateSet = (index: number, team: "team1" | "team2", value: string) => {
+    const parsed = parseInt(value) || 0;
+    setSets((prev) =>
+      prev.map((set, i) => (i === index ? { ...set, [team]: parsed } : set)),
+    );
+  };
+
+  const addSet = () => {
+    if (sets.length < 3) setSets((prev) => [...prev, { ...EMPTY_SET }]);
+  };
+
+  const removeSet = () => {
+    if (sets.length > 2) setSets((prev) => prev.slice(0, -1));
+  };
+
+  const handleSubmit = async () => {
     setError(null);
+
+    // Validate all entered sets
+    for (let i = 0; i < sets.length; i++) {
+      if (!isValidSet(sets[i])) {
+        setError(
+          `Set ${i + 1} is invalid. A set needs at least 6 points and a 2-point difference (e.g. 6-4, 7-5).`,
+        );
+        return;
+      }
+    }
+
+    const winnerTeam = determineWinner(sets);
+    if (winnerTeam === null) {
+      setError("No winner yet. Keep entering sets until one team wins 2.");
+      return;
+    }
+
+    const winnerId = winnerTeam === 1 ? player1Id : player2Id;
+    const loserId = winnerTeam === 1 ? player2Id : player1Id;
+    const winnerName = winnerTeam === 1 ? player1Name : player2Name;
+
+    setLoading(true);
     try {
-      await recordMatchResult(winnerId, loserId, matchId);
+      await recordMatchResult(winnerId, loserId, matchId, isCompetitive);
+      setWinner(winnerName);
       setDone(true);
     } catch (e) {
       setError("Something went wrong. Please try again.");
@@ -36,15 +98,20 @@ export default function SubmitResultScreen() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  // ─── Success state ────────────────────────────────────
+  // ─── Success ─────────────────────────────────────────
   if (done) {
     return (
       <View style={styles.container}>
-        <Text style={styles.emoji}>🎉</Text>
-        <Text style={styles.title}>Result saved!</Text>
-        <Text style={styles.sub}>Player ratings have been updated.</Text>
+        <Text style={styles.emoji}>🏆</Text>
+        <Text style={styles.title}>{winner} wins!</Text>
+        {isCompetitive && (
+          <Text style={styles.sub}>Player ratings have been updated.</Text>
+        )}
+        {!isCompetitive && (
+          <Text style={styles.sub}>Friendly match — ratings unchanged.</Text>
+        )}
         <TouchableOpacity
           style={styles.btn}
           onPress={() => router.replace("/")}
@@ -55,72 +122,142 @@ export default function SubmitResultScreen() {
     );
   }
 
-  // ─── Main state ───────────────────────────────────────
+  // ─── Main ─────────────────────────────────────────────
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Who won the match?</Text>
-      <Text style={styles.sub}>Tap the winning player to save the result</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Enter Match Results</Text>
+      <Text style={styles.sub}>
+        {player1Name} vs {player2Name}
+      </Text>
+
+      {isCompetitive ? (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>
+            ⚔️ Competitive — ratings will update
+          </Text>
+        </View>
+      ) : (
+        <View style={[styles.badge, styles.badgeFriendly]}>
+          <Text style={styles.badgeText}>🤝 Friendly — ratings unchanged</Text>
+        </View>
+      )}
+
+      {sets.map((set, index) => (
+        <View key={index} style={styles.setRow}>
+          <Text style={styles.setLabel}>Set {index + 1}</Text>
+
+          <View style={styles.scoreInputs}>
+            <View style={styles.scoreBlock}>
+              <Text style={styles.playerLabel} numberOfLines={1}>
+                {player1Name}
+              </Text>
+              <TextInput
+                style={styles.scoreInput}
+                keyboardType="number-pad"
+                value={String(set.team1)}
+                onChangeText={(v) => updateSet(index, "team1", v)}
+                maxLength={2}
+              />
+            </View>
+
+            <Text style={styles.dash}>—</Text>
+
+            <View style={styles.scoreBlock}>
+              <Text style={styles.playerLabel} numberOfLines={1}>
+                {player2Name}
+              </Text>
+              <TextInput
+                style={styles.scoreInput}
+                keyboardType="number-pad"
+                value={String(set.team2)}
+                onChangeText={(v) => updateSet(index, "team2", v)}
+                maxLength={2}
+              />
+            </View>
+          </View>
+        </View>
+      ))}
+
+      <View style={styles.setControls}>
+        {sets.length < 3 && (
+          <TouchableOpacity onPress={addSet} style={styles.setControlBtn}>
+            <Text style={styles.setControlText}>+ Add set 3</Text>
+          </TouchableOpacity>
+        )}
+        {sets.length === 3 && (
+          <TouchableOpacity onPress={removeSet} style={styles.setControlBtn}>
+            <Text style={[styles.setControlText, { color: "#dc2626" }]}>
+              − Remove set 3
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
       {error && <Text style={styles.error}>{error}</Text>}
 
       {loading ? (
         <ActivityIndicator size="large" color="#2563eb" />
       ) : (
-        <View style={styles.btnGroup}>
-          <TouchableOpacity
-            style={styles.btn}
-            onPress={() => handleSelectWinner(player1Id, player2Id)}
-          >
-            <Text style={styles.btnText}>{player1Name}</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.vs}>vs</Text>
-
-          <TouchableOpacity
-            style={styles.btn}
-            onPress={() => handleSelectWinner(player2Id, player1Id)}
-          >
-            <Text style={styles.btnText}>{player2Name}</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.btn} onPress={handleSubmit}>
+          <Text style={styles.btnText}>Submit Result</Text>
+        </TouchableOpacity>
       )}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
-    gap: 12,
+    gap: 16,
     backgroundColor: "#fff",
   },
-  emoji: {
-    fontSize: 48,
+  emoji: { fontSize: 48 },
+  title: { fontSize: 22, fontWeight: "700", textAlign: "center" },
+  sub: { fontSize: 14, color: "#666", textAlign: "center" },
+  badge: {
+    backgroundColor: "#eff6ff",
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  sub: {
-    fontSize: 14,
-    color: "#666",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  error: {
-    color: "#dc2626",
-    fontSize: 14,
-    textAlign: "center",
-  },
-  btnGroup: {
+  badgeFriendly: { backgroundColor: "#f0fdf4" },
+  badgeText: { fontSize: 13, fontWeight: "600", color: "#1e40af" },
+  setRow: {
     width: "100%",
+    backgroundColor: "#f9fafb",
+    borderRadius: 12,
+    padding: 14,
+    gap: 10,
+  },
+  setLabel: { fontWeight: "700", fontSize: 14, color: "#0d2432" },
+  scoreInputs: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 12,
   },
+  scoreBlock: { alignItems: "center", gap: 4, flex: 1 },
+  playerLabel: { fontSize: 12, color: "#6b7280", fontWeight: "500" },
+  scoreInput: {
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "center",
+    width: "100%",
+    color: "#0d2432",
+  },
+  dash: { fontSize: 20, color: "#9ca3af", fontWeight: "300" },
+  setControls: { width: "100%" },
+  setControlBtn: { paddingVertical: 8 },
+  setControlText: { color: "#2563eb", fontWeight: "600", textAlign: "center" },
+  error: { color: "#dc2626", fontSize: 13, textAlign: "center" },
   btn: {
     backgroundColor: "#2563eb",
     paddingVertical: 16,
@@ -133,10 +270,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "600",
     fontSize: 16,
-  },
-  vs: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#999",
   },
 });

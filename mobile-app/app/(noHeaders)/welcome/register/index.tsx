@@ -21,7 +21,7 @@ const RegisterStep1 = () => {
     if (selectedSport && selectedLevel) {
       router.push({
         pathname: "/(noHeaders)/welcome/register/credentials",
-        params: { sport: selectedSport, level: selectedLevel },
+        params: { sport: selectedSport, level: selectedLevel }, //new players maybe change to 1.5 -> look at PDF of assignment
       });
     }
   };
