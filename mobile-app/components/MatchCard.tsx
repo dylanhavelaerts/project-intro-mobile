@@ -17,6 +17,11 @@ export type MatchData = {
 
 type PlayerData = { name: string; rating: string; avatar: string | null };
 
+type MatchCardProps = {
+  match: MatchData;
+  onPress?: () => void;
+};
+
 const PlayerSlot = ({ player }: { player: PlayerData | null }) => {
   if (player) {
     return (
@@ -45,7 +50,7 @@ const PlayerSlot = ({ player }: { player: PlayerData | null }) => {
   );
 };
 
-const MatchCard = ({ match }: { match: MatchData }) => {
+const MatchCard = ({ match, onPress }: MatchCardProps) => {
   const leftTeam = [match.players[0], match.players[1]];
   const rightTeam = [match.players[2], match.players[3]];
 
@@ -53,7 +58,7 @@ const MatchCard = ({ match }: { match: MatchData }) => {
     <TouchableOpacity
       style={styles.matchCard}
       activeOpacity={0.7}
-      onPress={() => router.push("/(noHeaders)/makeMatch" as any)}
+      onPress={onPress ?? (() => router.push("/(noHeaders)/makeMatch" as any))}
     >
       {/* Date & Time */}
       <Text style={styles.matchDateTime}>
