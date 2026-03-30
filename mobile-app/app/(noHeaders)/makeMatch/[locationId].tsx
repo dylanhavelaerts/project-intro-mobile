@@ -930,7 +930,9 @@ export default function VenueMakeMatch() {
                 </View>
               ) : (
                 (showAvailable
-                  ? matches.filter((m) => (m.players?.length ?? 0) < 4)
+                  ? matches.filter(
+                      (m) => (m.players?.filter(Boolean).length ?? 0) < 4,
+                    )
                   : matches
                 ).map((m) => (
                   <View key={m.id} style={styles.courtRow}>
@@ -940,7 +942,7 @@ export default function VenueMakeMatch() {
                         {m.levelMax}
                       </Text>
                       <Text style={styles.courtMeta}>
-                        Players: {m.players?.length ?? 0}/4 ·{" "}
+                        Players: {m.players?.filter(Boolean).length ?? 0}/4 ·{" "}
                         {m.mixed ? "Mixed" : "Not mixed"} ·{" "}
                         {m.competitive ? "Competitive" : "Friendly"}
                       </Text>
