@@ -8,7 +8,10 @@ export type FirestoreMatch = {
   dateKey?: string;
   startMinute?: number;
   durationMinutes?: number;
+  createdBy?: string;
+  status?: "open" | "full" | "completed" | "cancelled";
   players?: (string | null)[];
+  playerNames?: string[];
   levelMin?: number;
   levelMax?: number;
   competitive?: boolean;

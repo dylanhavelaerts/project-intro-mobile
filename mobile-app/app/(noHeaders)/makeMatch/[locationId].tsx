@@ -486,7 +486,7 @@ export default function VenueMakeMatch() {
 
       // Fetch current user's name
       const userSnap = await getDoc(doc(db, "users", userId));
-      const userName = userSnap.data()?.name ?? "Unknown";
+      const userName = userSnap.data()?.username ?? "Unknown";
 
       const matchRef = doc(db, "matches", matchId);
       const matchSnap = await getDoc(matchRef);
@@ -951,7 +951,7 @@ export default function VenueMakeMatch() {
                         <Pressable
                           onPress={() =>
                             router.push({
-                              pathname: "/makeMatch/[locationId]",
+                              pathname: "/(noHeaders)/makeMatch/submitResult",
                               params: {
                                 locationId: locationId,
                                 matchId: m.id,

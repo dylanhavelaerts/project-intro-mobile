@@ -263,11 +263,25 @@ export default function FindMatchDetailPage() {
 
       const nextStatus = latestSlots.every(Boolean) ? "full" : "open";
 
-      await updateDoc(doc(db, "matches", match.id), {
-        players: latestSlots,
-        status: nextStatus,
+      // Fetch joining user's name
+      const joiningUserSnap = await getDoc(doc(db, "users", currentUserId));
+      const joiningUserName = joiningUserSnap.data()?.username ?? "Unknown";
+
+      // Mirror playerNames array to match the players slots
+      const latestMatchData = latestMatchSnap.data() as any;
+      const currentNames: (string | null)[] = Array.from(
+        { length: 4 },
+        (_, i) => latestMatchData.playerNames?.[i] ?? null,
+      );
+      requestedSlots.forEach((slot) => {
+        currentNames[slot] = joiningUserName;
       });
 
+      await updateDoc(doc(db, "matches", match.id), {
+        players: latestSlots,
+        playerNames: currentNames,
+        status: nextStatus,
+      });
       openPopup("Payment successful", "You paid.", "success");
       setPendingSlotIndexes([]);
       await refresh();
@@ -323,7 +337,30 @@ export default function FindMatchDetailPage() {
           pendingSlotIndexes={pendingSlotIndexes}
           onSlotPress={handleSlotPress}
         />
-
+        {/* Simulate Match — only visible to creator when match is full */}
+        {match.createdBy === currentUserId && match.status === "full" && (
+          <View style={styles.simulateWrap}>
+            <TouchableOpacity
+              style={styles.simulateButton}
+              activeOpacity={0.9}
+              onPress={() =>
+                router.push({
+                  pathname: "/(noHeaders)/makeMatch/submitResult",
+                  params: {
+                    matchId: match.id,
+                    player1Id: match.players?.[0] ?? "",
+                    player1Name: playerSlots[0]?.name ?? "Player 1",
+                    player2Id: match.players?.[1] ?? "",
+                    player2Name: playerSlots[1]?.name ?? "Player 2",
+                    competitive: String(match.competitive ?? false),
+                  },
+                } as any)
+              }
+            >
+              <Text style={styles.simulateText}>▶ Simulate Match</Text>
+            </TouchableOpacity>
+          </View>
+        )}
         <View style={styles.chatWrap}>
           <TouchableOpacity
             style={styles.chatButton}
@@ -524,6 +561,27 @@ const styles = StyleSheet.create({
   popupButtonText: {
     color: "#fff",
     fontSize: 13,
+    fontWeight: "700",
+  },
+  simulateWrap: {
+    marginTop: 16,
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  simulateButton: {
+    backgroundColor: "#0d2432",
+    borderRadius: 14,
+    paddingHorizontal: 28,
+    paddingVertical: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  simulateText: {
+    color: "#fff",
+    fontSize: 15,
     fontWeight: "700",
   },
 });

@@ -42,7 +42,10 @@ export const useOpenMatches = (): UseOpenMatchesResult => {
 
     try {
       const matchesSnap = await getDocs(
-        query(collection(db, "matches"), where("status", "==", "open")),
+        query(
+          collection(db, "matches"),
+          where("status", "in", ["open", "full"]),
+        ),
       );
 
       // Map raw Firestore documents to typed objects and sort them
@@ -71,7 +74,9 @@ export const useOpenMatches = (): UseOpenMatchesResult => {
         new Set(
           rawMatches
             .flatMap((m) => (Array.isArray(m.players) ? m.players : []))
-            .filter(Boolean),
+            .filter(
+              (id): id is string => typeof id === "string" && id.length > 0,
+            ),
         ),
       );
 

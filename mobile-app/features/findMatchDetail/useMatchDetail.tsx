@@ -8,10 +8,7 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "@/config/firebaseConfig";
-import {
-  buildTimeLabel,
-  formatLevel,
-} from "./matchDetailFormatters";
+import { buildTimeLabel, formatLevel } from "./matchDetailFormatters";
 import { CourtDoc, LocationDoc, MatchDoc, PlayerView, UserDoc } from "./types";
 
 type BookingDoc = {
@@ -128,7 +125,9 @@ export const useMatchDetail = (matchId?: string): UseMatchDetailResult => {
 
       const slotIds = Array.from({ length: 4 }, (_, index) => {
         const value = rawMatch.players?.[index];
-        return typeof value === "string" && value.trim().length > 0 ? value : null;
+        return typeof value === "string" && value.trim().length > 0
+          ? value
+          : null;
       });
 
       const uniqueIds = Array.from(
@@ -165,7 +164,9 @@ export const useMatchDetail = (matchId?: string): UseMatchDetailResult => {
       });
 
       setPlayerSlots(resolvedSlots);
-      setPlayers(resolvedSlots.filter((player): player is PlayerView => Boolean(player)));
+      setPlayers(
+        resolvedSlots.filter((player): player is PlayerView => Boolean(player)),
+      );
     } catch (e) {
       console.error(e);
       setError("Could not load match details.");

@@ -8,7 +8,9 @@ export type MatchDoc = {
   dateKey?: string;
   startMinute?: number;
   durationMinutes?: number;
+  createdBy?: string;
   players?: (string | null)[];
+  playerNames?: string[];
   levelMin?: number;
   levelMax?: number;
   mixed?: boolean;
