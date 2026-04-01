@@ -85,6 +85,99 @@ function calculateNewRating(
   return parseFloat(newRating.toFixed(2));
 }
 
+function average(values: number[]): number {
+  if (values.length === 0) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+export async function recordDoublesMatchResult(
+  winnerIds: string[],
+  loserIds: string[],
+  matchId?: string,
+  competitive?: boolean,
+) {
+  if (winnerIds.length !== 2 || loserIds.length !== 2) {
+    throw new Error("Doubles match requires exactly 2 winners and 2 losers.");
+  }
+
+  if (competitive) {
+    const winnerRefs = winnerIds.map((id) => doc(db, "users", id));
+    const loserRefs = loserIds.map((id) => doc(db, "users", id));
+    const allRefs = [...winnerRefs, ...loserRefs];
+
+    const snaps = await Promise.all(allRefs.map((ref) => getDoc(ref)));
+    const winnerSnaps = snaps.slice(0, 2);
+    const loserSnaps = snaps.slice(2);
+
+    const winnerRatings = winnerSnaps.map((snap) => {
+      const data = snap.data();
+      return data?.rating ?? seedRatingFromLevel(data?.level);
+    });
+
+    const loserRatings = loserSnaps.map((snap) => {
+      const data = snap.data();
+      return data?.rating ?? seedRatingFromLevel(data?.level);
+    });
+
+    const winnerTeamRating = average(winnerRatings);
+    const loserTeamRating = average(loserRatings);
+
+    const newWinnerTeamRating = calculateNewRating(
+      winnerTeamRating,
+      loserTeamRating,
+      true,
+    );
+    const newLoserTeamRating = calculateNewRating(
+      loserTeamRating,
+      winnerTeamRating,
+      false,
+    );
+
+    const winnerDelta = parseFloat(
+      (newWinnerTeamRating - winnerTeamRating).toFixed(2),
+    );
+    const loserDelta = parseFloat(
+      (newLoserTeamRating - loserTeamRating).toFixed(2),
+    );
+
+    const winnerUpdates = winnerRatings.map((rating) => {
+      const next = Math.min(
+        RATING_MAX,
+        Math.max(RATING_MIN, rating + winnerDelta),
+      );
+      return parseFloat(next.toFixed(2));
+    });
+
+    const loserUpdates = loserRatings.map((rating) => {
+      const next = Math.min(
+        RATING_MAX,
+        Math.max(RATING_MIN, rating + loserDelta),
+      );
+      return parseFloat(next.toFixed(2));
+    });
+
+    await Promise.all([
+      ...winnerRefs.map((ref, i) =>
+        updateDoc(ref, {
+          rating: winnerUpdates[i],
+          level: getLevelLabel(winnerUpdates[i]),
+        }),
+      ),
+      ...loserRefs.map((ref, i) =>
+        updateDoc(ref, {
+          rating: loserUpdates[i],
+          level: getLevelLabel(loserUpdates[i]),
+        }),
+      ),
+    ]);
+  }
+
+  if (matchId) {
+    const matchRef = doc(db, "matches", matchId);
+    await updateDoc(matchRef, { status: "completed" });
+  }
+}
+
 // ─── Main function ────────────────────────────────────────
 
 export async function recordMatchResult(

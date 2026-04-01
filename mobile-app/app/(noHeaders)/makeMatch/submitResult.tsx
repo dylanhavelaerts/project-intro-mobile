@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import {
-  recordMatchResult,
+  recordDoublesMatchResult,
   determineWinner,
   isValidSet,
 } from "../../../config/rating";
@@ -18,25 +18,48 @@ import type { SetScore } from "../../../config/rating";
 
 const EMPTY_SET: SetScore = { team1: 0, team2: 0 };
 
+const parseArrayParam = (value?: string, fallback: string[] = []): string[] => {
+  if (!value) return fallback;
+
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed)) return fallback;
+    return parsed.map((item) => String(item ?? ""));
+  } catch {
+    return fallback;
+  }
+};
+
 export default function SubmitResultScreen() {
   const router = useRouter();
-  const {
-    player1Id,
-    player1Name,
-    player2Id,
-    player2Name,
-    matchId,
-    competitive,
-  } = useLocalSearchParams<{
-    player1Id: string;
-    player1Name: string;
-    player2Id: string;
-    player2Name: string;
-    matchId: string;
-    competitive: string; // route params are always strings
-  }>();
+  const { teamAIds, teamANames, teamBIds, teamBNames, matchId, competitive } =
+    useLocalSearchParams<{
+      teamAIds: string;
+      teamANames: string;
+      teamBIds: string;
+      teamBNames: string;
+      matchId: string;
+      competitive: string; // route params are always strings
+    }>();
 
   const isCompetitive = competitive === "true";
+  const teamAPlayerIds = parseArrayParam(teamAIds).slice(0, 2);
+  const teamBPlayerIds = parseArrayParam(teamBIds).slice(0, 2);
+  const teamAPlayerNames = parseArrayParam(teamANames, [
+    "Player A1",
+    "Player A2",
+  ]).slice(0, 2);
+  const teamBPlayerNames = parseArrayParam(teamBNames, [
+    "Player B1",
+    "Player B2",
+  ]).slice(0, 2);
+
+  const teamALabel =
+    teamAPlayerNames.filter((name) => name.trim().length > 0).join(" & ") ||
+    "Team A";
+  const teamBLabel =
+    teamBPlayerNames.filter((name) => name.trim().length > 0).join(" & ") ||
+    "Team B";
 
   // Up to 3 sets, start with 2 visible
   const [sets, setSets] = useState<SetScore[]>([
@@ -83,13 +106,30 @@ export default function SubmitResultScreen() {
       return;
     }
 
-    const winnerId = winnerTeam === 1 ? player1Id : player2Id;
-    const loserId = winnerTeam === 1 ? player2Id : player1Id;
-    const winnerName = winnerTeam === 1 ? player1Name : player2Name;
+    const winnerIds = winnerTeam === 1 ? teamAPlayerIds : teamBPlayerIds;
+    const loserIds = winnerTeam === 1 ? teamBPlayerIds : teamAPlayerIds;
+    const winnerName = winnerTeam === 1 ? "Team A" : "Team B";
+
+    const hasValidTeamA =
+      teamAPlayerIds.length === 2 &&
+      teamAPlayerIds.every((id) => id.trim().length > 0);
+    const hasValidTeamB =
+      teamBPlayerIds.length === 2 &&
+      teamBPlayerIds.every((id) => id.trim().length > 0);
+
+    if (!hasValidTeamA || !hasValidTeamB) {
+      setError("Both Team A and Team B must have exactly 2 players.");
+      return;
+    }
 
     setLoading(true);
     try {
-      await recordMatchResult(winnerId, loserId, matchId, isCompetitive);
+      await recordDoublesMatchResult(
+        winnerIds,
+        loserIds,
+        matchId,
+        isCompetitive,
+      );
       setWinner(winnerName);
       setDone(true);
     } catch (e) {
@@ -126,9 +166,9 @@ export default function SubmitResultScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Enter Match Results</Text>
-      <Text style={styles.sub}>
-        {player1Name} vs {player2Name}
-      </Text>
+      <Text style={styles.sub}>Team A vs Team B</Text>
+      <Text style={styles.sub}>{teamALabel}</Text>
+      <Text style={styles.sub}>{teamBLabel}</Text>
 
       {isCompetitive ? (
         <View style={styles.badge}>
@@ -149,7 +189,7 @@ export default function SubmitResultScreen() {
           <View style={styles.scoreInputs}>
             <View style={styles.scoreBlock}>
               <Text style={styles.playerLabel} numberOfLines={1}>
-                {player1Name}
+                Team A
               </Text>
               <TextInput
                 style={styles.scoreInput}
@@ -164,7 +204,7 @@ export default function SubmitResultScreen() {
 
             <View style={styles.scoreBlock}>
               <Text style={styles.playerLabel} numberOfLines={1}>
-                {player2Name}
+                Team B
               </Text>
               <TextInput
                 style={styles.scoreInput}

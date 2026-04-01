@@ -348,10 +348,22 @@ export default function FindMatchDetailPage() {
                   pathname: "/(noHeaders)/makeMatch/submitResult",
                   params: {
                     matchId: match.id,
-                    player1Id: match.players?.[0] ?? "",
-                    player1Name: playerSlots[0]?.name ?? "Player 1",
-                    player2Id: match.players?.[1] ?? "",
-                    player2Name: playerSlots[1]?.name ?? "Player 2",
+                    teamAIds: JSON.stringify([
+                      match.players?.[0] ?? "",
+                      match.players?.[1] ?? "",
+                    ]),
+                    teamANames: JSON.stringify([
+                      playerSlots[0]?.name ?? "Player A1",
+                      playerSlots[1]?.name ?? "Player A2",
+                    ]),
+                    teamBIds: JSON.stringify([
+                      match.players?.[2] ?? "",
+                      match.players?.[3] ?? "",
+                    ]),
+                    teamBNames: JSON.stringify([
+                      playerSlots[2]?.name ?? "Player B1",
+                      playerSlots[3]?.name ?? "Player B2",
+                    ]),
                     competitive: String(match.competitive ?? false),
                   },
                 } as any)

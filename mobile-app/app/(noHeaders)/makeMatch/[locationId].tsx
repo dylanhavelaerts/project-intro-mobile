@@ -955,10 +955,22 @@ export default function VenueMakeMatch() {
                               params: {
                                 locationId: locationId,
                                 matchId: m.id,
-                                player1Id: m.players[0],
-                                player1Name: m.playerNames?.[0] ?? "Player 1",
-                                player2Id: m.players[1] ?? m.players[0],
-                                player2Name: m.playerNames?.[1] ?? "Player 2",
+                                teamAIds: JSON.stringify([
+                                  m.players?.[0] ?? "",
+                                  m.players?.[1] ?? "",
+                                ]),
+                                teamANames: JSON.stringify([
+                                  m.playerNames?.[0] ?? "Player A1",
+                                  m.playerNames?.[1] ?? "Player A2",
+                                ]),
+                                teamBIds: JSON.stringify([
+                                  m.players?.[2] ?? "",
+                                  m.players?.[3] ?? "",
+                                ]),
+                                teamBNames: JSON.stringify([
+                                  m.playerNames?.[2] ?? "Player B1",
+                                  m.playerNames?.[3] ?? "Player B2",
+                                ]),
                                 competitive: String(m.competitive), // ← add this
                               },
                             })
