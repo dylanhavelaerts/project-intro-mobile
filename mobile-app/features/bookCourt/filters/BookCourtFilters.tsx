@@ -1,49 +1,37 @@
+import { useState } from "react";
 import {
   Image,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { useState } from "react";
-import { ClubFilterModal } from "./filters/ClubFilterModal";
-import { DayTimeFilterModal } from "./filters/DayTimeFilterModal";
-import { SportFilterModal } from "./filters/SportFilterModal";
-import { FindMatchFiltersState, MatchSport, TimeFilter } from "./types";
+import { getDateLabel, getSportLabel, getTimeFilterLabel } from "./filterUtils";
+import { BookDateFilterModal } from "./BookDateFilterModal";
+import { SportFilterModal } from "./SportFilterModal";
+import { TimeFilterModal } from "./TimeFilterModal";
+import {
+  BookCourtFiltersState,
+  BookingTimeFilter,
+  BookCourtSport,
+} from "./types";
 
-type FindMatchFiltersProps = {
-  filters: FindMatchFiltersState;
-  sportLabel: string;
-  clubsLabel: string;
-  daysLabel: string;
-  availableClubCount: number;
-  favoriteCount: number;
-  onChangeSport: (sport: MatchSport) => void;
-  onChangeMaxDistanceKm: (value: number) => void;
-  onToggleFavoriteOnly: (value: boolean) => void;
-  onToggleWeekday: (weekday: number) => void;
-  onChangeTimeFilter: (timeFilter: TimeFilter) => void;
+type BookCourtFiltersProps = {
+  filters: BookCourtFiltersState;
+  onChangeSport: (sport: BookCourtSport) => void;
+  onChangeDate: (date: Date) => void;
+  onChangeTimeFilter: (timeFilter: BookingTimeFilter) => void;
 };
 
-// ------------------------------------------------------------
-// COMPONENT
-// ------------------------------------------------------------
-export const FindMatchFilters = ({
+export const BookCourtFilters = ({
   filters,
-  sportLabel,
-  clubsLabel,
-  daysLabel,
-  availableClubCount,
-  favoriteCount,
   onChangeSport,
-  onChangeMaxDistanceKm,
-  onToggleFavoriteOnly,
-  onToggleWeekday,
+  onChangeDate,
   onChangeTimeFilter,
-}: FindMatchFiltersProps) => {
+}: BookCourtFiltersProps) => {
   const [activeModal, setActiveModal] = useState<
-    "sport" | "clubs" | "days" | null
+    "sport" | "date" | "time" | null
   >(null);
 
   return (
@@ -62,7 +50,9 @@ export const FindMatchFilters = ({
             style={styles.filterPill}
             onPress={() => setActiveModal("sport")}
           >
-            <Text style={styles.filterText}>{sportLabel}</Text>
+            <Text style={styles.filterText}>
+              {getSportLabel(filters.sport)}
+            </Text>
             <Image
               source={require("@/assets/images/bookCourt/arrow-down.png")}
               style={styles.downArrowIcon}
@@ -71,9 +61,11 @@ export const FindMatchFilters = ({
 
           <TouchableOpacity
             style={styles.filterPill}
-            onPress={() => setActiveModal("clubs")}
+            onPress={() => setActiveModal("date")}
           >
-            <Text style={styles.filterText}>{clubsLabel}</Text>
+            <Text style={styles.filterText}>
+              {getDateLabel(filters.selectedDate)}
+            </Text>
             <Image
               source={require("@/assets/images/bookCourt/arrow-down.png")}
               style={styles.downArrowIcon}
@@ -82,9 +74,11 @@ export const FindMatchFilters = ({
 
           <TouchableOpacity
             style={styles.filterPill}
-            onPress={() => setActiveModal("days")}
+            onPress={() => setActiveModal("time")}
           >
-            <Text style={styles.filterText}>{daysLabel}</Text>
+            <Text style={styles.filterText}>
+              {getTimeFilterLabel(filters.timeFilter)}
+            </Text>
             <Image
               source={require("@/assets/images/bookCourt/arrow-down.png")}
               style={styles.downArrowIcon}
@@ -100,41 +94,29 @@ export const FindMatchFilters = ({
         onSelectSport={onChangeSport}
       />
 
-      <ClubFilterModal
-        visible={activeModal === "clubs"}
-        maxDistanceKm={filters.maxDistanceKm}
-        favoriteOnly={filters.favoriteOnly}
-        availableClubCount={availableClubCount}
-        favoriteCount={favoriteCount}
+      <BookDateFilterModal
+        visible={activeModal === "date"}
+        selectedDate={filters.selectedDate}
         onClose={() => setActiveModal(null)}
-        onChangeDistance={onChangeMaxDistanceKm}
-        onToggleFavoriteOnly={onToggleFavoriteOnly}
+        onSelectDate={onChangeDate}
       />
 
-      <DayTimeFilterModal
-        visible={activeModal === "days"}
-        selectedWeekdays={filters.selectedWeekdays}
+      <TimeFilterModal
+        visible={activeModal === "time"}
         selectedTimeFilter={filters.timeFilter}
         onClose={() => setActiveModal(null)}
-        onToggleWeekday={onToggleWeekday}
         onSelectTime={onChangeTimeFilter}
       />
     </>
   );
 };
 
-// ------------------------------------------------------------
-// STYLES
-// ------------------------------------------------------------
 const styles = StyleSheet.create({
   filterSection: {
     flexDirection: "row",
     alignItems: "center",
     paddingLeft: 20,
     paddingVertical: 10,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
   },
   filterScrollContent: {
     gap: 10,

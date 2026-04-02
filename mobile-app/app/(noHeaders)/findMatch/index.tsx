@@ -1,8 +1,16 @@
 import { router } from "expo-router";
+import { useMemo, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { FindMatchFilters } from "@/features/findMatch/FindMatchFilters";
 import { FindMatchHeader } from "@/features/findMatch/FindMatchHeader";
 import { FindMatchList } from "@/features/findMatch/FindMatchList";
+import {
+  DEFAULT_FIND_MATCH_FILTERS,
+  getFilteredMatches,
+  getSportFilterLabel,
+  getVisibleClubCount,
+  getWeekdayFilterLabel,
+} from "@/features/findMatch/filters/filterUtils";
 import { useOpenMatches } from "@/features/findMatch/useOpenMatches";
 
 // ------------------------------------------------------------
@@ -12,13 +20,75 @@ const FindMatch = () => {
   // ------------------------------------------------------------
   // DATA STATE
   // ------------------------------------------------------------
-  const { matches, loading, error } = useOpenMatches();
+  const { matches, clubs, favoriteLocationIds, loading, error } =
+    useOpenMatches();
+  const [filters, setFilters] = useState(DEFAULT_FIND_MATCH_FILTERS);
+
+  const filteredMatches = useMemo(
+    () => getFilteredMatches(matches, filters, favoriteLocationIds),
+    [matches, filters, favoriteLocationIds],
+  );
+
+  const visibleClubCount = useMemo(
+    () => getVisibleClubCount(clubs, filters, favoriteLocationIds),
+    [clubs, filters, favoriteLocationIds],
+  );
+
+  const sportLabel = getSportFilterLabel(filters.sport);
+  const clubsLabel = `${visibleClubCount} Clubs`;
+  const daysLabel = getWeekdayFilterLabel(
+    filters.selectedWeekdays,
+    filters.timeFilter,
+  );
 
   return (
     <View style={styles.container}>
       <FindMatchHeader />
-      <FindMatchFilters />
-      <FindMatchList loading={loading} error={error} matches={matches} />
+      <FindMatchFilters
+        filters={filters}
+        sportLabel={sportLabel}
+        clubsLabel={clubsLabel}
+        daysLabel={daysLabel}
+        availableClubCount={visibleClubCount}
+        favoriteCount={favoriteLocationIds.length}
+        onChangeSport={(sport) =>
+          setFilters((prev) => ({
+            ...prev,
+            sport,
+          }))
+        }
+        onChangeMaxDistanceKm={(maxDistanceKm) =>
+          setFilters((prev) => ({
+            ...prev,
+            maxDistanceKm,
+          }))
+        }
+        onToggleFavoriteOnly={(favoriteOnly) =>
+          setFilters((prev) => ({
+            ...prev,
+            favoriteOnly,
+          }))
+        }
+        onToggleWeekday={(weekday) =>
+          setFilters((prev) => ({
+            ...prev,
+            selectedWeekdays: prev.selectedWeekdays.includes(weekday)
+              ? prev.selectedWeekdays.filter((d) => d !== weekday)
+              : [...prev.selectedWeekdays, weekday],
+          }))
+        }
+        onChangeTimeFilter={(timeFilter) =>
+          setFilters((prev) => ({
+            ...prev,
+            timeFilter,
+          }))
+        }
+      />
+      <FindMatchList
+        loading={loading}
+        error={error}
+        matches={filteredMatches}
+      />
 
       <TouchableOpacity
         style={styles.floatingButton}

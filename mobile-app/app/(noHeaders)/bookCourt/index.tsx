@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   View,
   Image,
@@ -11,15 +11,35 @@ import {
   ActivityIndicator,
 } from "react-native";
 import CourtCard, { CourtData } from "../../../components/CourtCard";
-import { db } from "@/config/firebaseConfig";
-import { collection, getDocs } from "firebase/firestore";
+import { auth, db } from "@/config/firebaseConfig";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
+import { BookCourtFilters } from "@/features/bookCourt/filters/BookCourtFilters";
+import {
+  dateKey,
+  DEFAULT_BOOK_COURT_FILTERS,
+  getFilteredCourts,
+} from "@/features/bookCourt/filters/filterUtils";
+import { BookCourtSport } from "@/features/bookCourt/filters/types";
+
+type BookCourtListItem = CourtData & {
+  sport: BookCourtSport;
+  openingHours?: string;
+};
 
 const BookCourt = () => {
   const [activeIcon, setActiveIcon] = useState<"location" | "heart">(
     "location",
   );
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-  const [courts, setCourts] = useState<CourtData[]>([]);
+  const [courts, setCourts] = useState<BookCourtListItem[]>([]);
+  const [filters, setFilters] = useState(DEFAULT_BOOK_COURT_FILTERS);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,6 +49,26 @@ const BookCourt = () => {
           getDocs(collection(db, "locations")),
           getDocs(collection(db, "courts")),
         ]);
+
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+          const userData = userSnap.exists() ? userSnap.data() : null;
+
+          const persistedFavorites = Array.isArray(
+            userData?.favoriteLocationIds,
+          )
+            ? userData.favoriteLocationIds
+            : Array.isArray(userData?.favouriteLocationIds)
+              ? userData.favouriteLocationIds
+              : [];
+
+          setFavoriteIds(
+            persistedFavorites.filter(
+              (id: unknown): id is string => typeof id === "string",
+            ),
+          );
+        }
 
         const courtsByLocation: Record<
           string,
@@ -41,7 +81,7 @@ const BookCourt = () => {
           courtsByLocation[d.locationId].push(d as any);
         });
 
-        const mapped: CourtData[] = locSnap.docs.map((doc) => {
+        const mapped: BookCourtListItem[] = locSnap.docs.map((doc) => {
           const loc = doc.data();
           const locCourts = courtsByLocation[doc.id] ?? [];
           const minPrice =
@@ -61,6 +101,8 @@ const BookCourt = () => {
             distance: loc.city,
             location: `${loc.address}, ${loc.city}`,
             timeSlots: [],
+            sport: loc.sport?.toLowerCase() === "tennis" ? "tennis" : "padel",
+            openingHours: loc.openingHours,
           };
         });
 
@@ -75,13 +117,46 @@ const BookCourt = () => {
     fetchData();
   }, []);
 
-  const toggleFavorite = (id: string) => {
-    setFavoriteIds((prev) =>
-      prev.includes(id) ? prev.filter((fId) => fId !== id) : [...prev, id],
-    );
+  const toggleFavorite = async (id: string) => {
+    const nextFavorites = favoriteIds.includes(id)
+      ? favoriteIds.filter((fId) => fId !== id)
+      : [...favoriteIds, id];
+
+    setFavoriteIds(nextFavorites);
+
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+
+    const userRef = doc(db, "users", currentUser.uid);
+
+    try {
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        await updateDoc(userRef, {
+          favoriteLocationIds: nextFavorites,
+        });
+      } else {
+        await setDoc(
+          userRef,
+          {
+            uid: currentUser.uid,
+            favoriteLocationIds: nextFavorites,
+          },
+          { merge: true },
+        );
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const courtsToShow = courts
+  const filteredCourts = useMemo(
+    () => getFilteredCourts(courts, filters),
+    [courts, filters],
+  );
+
+  const courtsToShow = filteredCourts
     .map((court) => ({ ...court, isFavorite: favoriteIds.includes(court.id) }))
     .filter((court) => (activeIcon === "heart" ? court.isFavorite : true));
 
@@ -148,33 +223,27 @@ const BookCourt = () => {
           </TouchableOpacity>
         </View>
       </View>
-      <View style={styles.filterSection}>
-        <Image
-          source={require("../../../assets/images/bookCourt/settings-sliders.png")}
-          style={styles.settingsIcon}
-        />
-        <TouchableOpacity style={styles.filterPill}>
-          <Text style={styles.filterText}>Padel</Text>
-          <Image
-            source={require("../../../assets/images/bookCourt/arrow-down.png")}
-            style={styles.downArrowIcon}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterPill}>
-          <Text style={styles.filterText}>04 Mar</Text>
-          <Image
-            source={require("../../../assets/images/bookCourt/arrow-down.png")}
-            style={styles.downArrowIcon}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterPill}>
-          <Text style={styles.filterText}>00:00 - 23:59</Text>
-          <Image
-            source={require("../../../assets/images/bookCourt/arrow-down.png")}
-            style={styles.downArrowIcon}
-          />
-        </TouchableOpacity>
-      </View>
+      <BookCourtFilters
+        filters={filters}
+        onChangeSport={(sport) =>
+          setFilters((prev) => ({
+            ...prev,
+            sport,
+          }))
+        }
+        onChangeDate={(selectedDate) =>
+          setFilters((prev) => ({
+            ...prev,
+            selectedDate,
+          }))
+        }
+        onChangeTimeFilter={(timeFilter) =>
+          setFilters((prev) => ({
+            ...prev,
+            timeFilter,
+          }))
+        }
+      />
 
       <ScrollView
         style={styles.courtSection}
@@ -187,7 +256,9 @@ const BookCourt = () => {
               key={court.id}
               activeOpacity={0.9}
               onPress={() =>
-                router.push(`/(noHeaders)/makeMatch/${court.id}` as any)
+                router.push(
+                  `/(noHeaders)/makeMatch/${court.id}?date=${dateKey(filters.selectedDate)}` as any,
+                )
               }
             >
               <CourtCard court={court} onToggleFavorite={toggleFavorite} />
@@ -270,42 +341,6 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
 
-  // FILTER SECTION
-  filterSection: {
-    width: "100%",
-    height: 50,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    paddingLeft: 25,
-    gap: 12,
-  },
-  settingsIcon: {
-    height: 20,
-    width: 20,
-    marginRight: 10,
-  },
-  filterPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#0d2432",
-    paddingRight: 6,
-    paddingLeft: 12,
-    paddingVertical: 4,
-    borderRadius: 20,
-    gap: 6,
-  },
-  filterText: {
-    color: "white",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  downArrowIcon: {
-    height: 16,
-    width: 16,
-    marginTop: 2,
-    tintColor: "white",
-  },
   courtSection: {
     flex: 1,
     marginTop: 10,

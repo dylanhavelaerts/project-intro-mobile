@@ -1,5 +1,9 @@
-import { MatchData } from "@/components/MatchCard";
-import { FirestoreMatch, MatchLookupMaps } from "./types";
+import {
+  EnrichedMatchData,
+  FirestoreMatch,
+  MatchLookupMaps,
+  MatchSport,
+} from "./types";
 
 // ------------------------------------------------------------
 // INTERNAL FORMATTERS
@@ -43,13 +47,75 @@ const formatPrice = (pricePerPlayer?: number) => {
   return Number.isInteger(value) ? `€ ${value}` : `€ ${value.toFixed(2)}`;
 };
 
+const normalizeSport = (value?: string): MatchSport => {
+  return value?.toLowerCase() === "tennis" ? "tennis" : "padel";
+};
+
+const weekdayFromDateKey = (dateKey?: string) => {
+  if (!dateKey) return null;
+
+  const [year, month, day] = dateKey.split("-").map((value) => Number(value));
+  if (!year || !month || !day) return null;
+
+  const date = new Date(year, month - 1, day);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.getDay();
+};
+
+const CITY_COORDS: Record<string, { lat: number; lon: number }> = {
+  antwerp: { lat: 51.2194, lon: 4.4025 },
+  brussels: { lat: 50.8503, lon: 4.3517 },
+  ghent: { lat: 51.0543, lon: 3.7174 },
+  mechelen: { lat: 51.0259, lon: 4.4775 },
+  leuven: { lat: 50.8798, lon: 4.7005 },
+};
+
+const toRadians = (value: number) => (value * Math.PI) / 180;
+
+const haversineDistanceKm = (
+  a: { lat: number; lon: number },
+  b: { lat: number; lon: number },
+) => {
+  const dLat = toRadians(b.lat - a.lat);
+  const dLon = toRadians(b.lon - a.lon);
+  const lat1 = toRadians(a.lat);
+  const lat2 = toRadians(b.lat);
+
+  const h =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+};
+
+export const estimateDistanceKmByCity = (
+  city: string | undefined,
+  userCity: string,
+) => {
+  if (!city) return 999;
+
+  const normalizedCity = city.toLowerCase().trim();
+  const normalizedUserCity = userCity.toLowerCase().trim();
+  if (normalizedCity === normalizedUserCity) return 2;
+
+  const cityCoords = CITY_COORDS[normalizedCity];
+  const userCoords = CITY_COORDS[normalizedUserCity];
+
+  if (cityCoords && userCoords) {
+    return Math.round(haversineDistanceKm(userCoords, cityCoords));
+  }
+
+  return 30;
+};
+
 // ------------------------------------------------------------
 // MAPPERS
 // ------------------------------------------------------------
 export const mapFirestoreMatchToCard = (
   match: FirestoreMatch,
   lookups: MatchLookupMaps,
-): MatchData => {
+  userCity: string,
+): EnrichedMatchData => {
   // Get related location and court data using lookup maps
   const location = match.locationId
     ? lookups.locationsById.get(match.locationId)
@@ -57,6 +123,13 @@ export const mapFirestoreMatchToCard = (
   const court = match.courtId
     ? lookups.courtsById.get(match.courtId)
     : undefined;
+  const creator = match.createdBy
+    ? lookups.usersById.get(match.createdBy)
+    : undefined;
+
+  const locationName = location?.name ?? "Unknown location";
+  const city = location?.city ?? locationName;
+  const distanceKm = estimateDistanceKmByCity(city, userCity);
 
   const players = Array.from({ length: 4 }, (_, index) => {
     const userId = match.players?.[index];
@@ -78,10 +151,18 @@ export const mapFirestoreMatchToCard = (
     levelRange: `${match.levelMin ?? "-"} - ${match.levelMax ?? "-"}`,
     players,
     court: court?.name ?? "Open court",
-    distance: "N/A",
-    location: location?.city ?? location?.name ?? "Unknown location",
+    distance: `${distanceKm}km`,
+    location: city,
     price: formatPrice(match.pricePerPlayer),
     duration: `${match.durationMinutes ?? 90}min`,
+    sport: normalizeSport(creator?.sport ?? location?.sport),
+    locationId: match.locationId ?? null,
+    locationName,
+    city,
+    weekday: weekdayFromDateKey(match.dateKey),
+    startMinute:
+      typeof match.startMinute === "number" ? match.startMinute : null,
+    distanceKm,
   };
 };
 

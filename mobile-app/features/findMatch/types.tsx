@@ -1,6 +1,10 @@
+import { MatchData } from "@/components/MatchCard";
+
 // ------------------------------------------------------------
 // FIRESTORE DOCUMENT TYPES
 // ------------------------------------------------------------
+export type MatchSport = "padel" | "tennis";
+
 export type FirestoreMatch = {
   id: string;
   locationId?: string;
@@ -21,6 +25,7 @@ export type FirestoreMatch = {
 export type FirestoreLocation = {
   name?: string;
   city?: string;
+  sport?: string;
 };
 
 export type FirestoreCourt = {
@@ -30,6 +35,10 @@ export type FirestoreCourt = {
 export type FirestoreUser = {
   username?: string;
   level?: string | number;
+  sport?: string;
+  city?: string;
+  favoriteLocationIds?: string[];
+  favouriteLocationIds?: string[];
 };
 
 // ------------------------------------------------------------
@@ -44,4 +53,32 @@ export type MatchLookupMaps = {
   locationsById: Map<string, FirestoreLocation | null>;
   courtsById: Map<string, FirestoreCourt | null>;
   usersById: Map<string, FirestoreUser | null>;
+};
+
+export type EnrichedMatchData = MatchData & {
+  sport: MatchSport;
+  locationId: string | null;
+  locationName: string;
+  city: string;
+  weekday: number | null;
+  startMinute: number | null;
+  distanceKm: number | null;
+};
+
+export type ClubOption = {
+  id: string;
+  name: string;
+  city: string;
+  distanceKm: number;
+  sport: MatchSport;
+};
+
+export type TimeFilter = "all" | "morning" | "afternoon" | "evening";
+
+export type FindMatchFiltersState = {
+  sport: MatchSport;
+  maxDistanceKm: number;
+  favoriteOnly: boolean;
+  selectedWeekdays: number[];
+  timeFilter: TimeFilter;
 };
