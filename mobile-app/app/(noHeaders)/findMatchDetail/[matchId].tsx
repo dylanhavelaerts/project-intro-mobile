@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -11,25 +11,20 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { auth, db } from "@/config/firebaseConfig";
+import { auth } from "@/config/firebaseConfig";
 import { DetailHeroHeader } from "@/features/findMatchDetail/DetailHeroHeader";
 import {
   formatLevel,
   formatPrice,
   minutesToHHMM,
-} from "@/features/findMatchDetail/matchDetailFormatters";
-import { MatchInformationSection } from "@/features/findMatchDetail/MatchInformationSection";
-import { MatchLocationCard } from "@/features/findMatchDetail/MatchLocationCard";
-import { MatchMetaCards } from "@/features/findMatchDetail/MatchMetaCards";
-import { MatchPlayersCard } from "@/features/findMatchDetail/MatchPlayersCard";
-import { MatchSummaryCard } from "@/features/findMatchDetail/MatchSummaryCard";
-import {
-  MatchDoc,
-  PlayerView,
-  UserDoc,
-} from "@/features/findMatchDetail/types";
-import { useMatchDetail } from "@/features/findMatchDetail/useMatchDetail";
+} from "@/features/findMatchDetail/model/matchDetailFormatters";
+import { MatchInformationSection } from "@/features/findMatchDetail/cards/MatchInformationSection";
+import { MatchLocationCard } from "@/features/findMatchDetail/cards/MatchLocationCard";
+import { MatchMetaCards } from "@/features/findMatchDetail/cards/MatchMetaCards";
+import { MatchPlayersCard } from "@/features/findMatchDetail/cards/MatchPlayersCard";
+import { MatchSummaryCard } from "@/features/findMatchDetail/cards/MatchSummaryCard";
+import { useMatchDetail } from "@/features/findMatchDetail/hooks/useMatchDetail";
+import { useMatchParticipation } from "@/features/findMatchDetail/hooks/useMatchParticipation";
 
 type PopupState = {
   visible: boolean;
@@ -70,15 +65,23 @@ export default function FindMatchDetailPage() {
 
   const currentUserId = auth.currentUser?.uid ?? null;
 
-  const [pendingSlotIndexes, setPendingSlotIndexes] = useState<number[]>([]);
-  const [bookingBusy, setBookingBusy] = useState(false);
-  const [currentUserPreview, setCurrentUserPreview] =
-    useState<PlayerView | null>(null);
   const [popup, setPopup] = useState<PopupState>({
     visible: false,
     title: "",
     message: "",
     tone: "success",
+  });
+
+  const {
+    pendingSlotIndexes,
+    renderedPlayerSlots,
+    bookingBusy,
+    onSlotPress,
+    bookSelectedPlaces,
+  } = useMatchParticipation({
+    match,
+    playerSlots,
+    refresh,
   });
 
   const openPopup = (
@@ -89,207 +92,57 @@ export default function FindMatchDetailPage() {
     setPopup({ visible: true, title, message, tone });
   };
 
-  useEffect(() => {
-    const loadCurrentUserPreview = async () => {
-      if (!currentUserId) {
-        setCurrentUserPreview(null);
-        return;
-      }
-
-      const existingPlayer = playerSlots.find(
-        (player) => player?.id === currentUserId,
-      );
-      if (existingPlayer) {
-        setCurrentUserPreview(existingPlayer);
-        return;
-      }
-
-      try {
-        const userSnap = await getDoc(doc(db, "users", currentUserId));
-        const user = userSnap.exists() ? (userSnap.data() as UserDoc) : null;
-
-        setCurrentUserPreview({
-          id: currentUserId,
-          name: user?.username ?? "You",
-          level: formatLevel(user?.level),
-          avatar: user?.profilePhoto ?? null,
-        });
-      } catch {
-        setCurrentUserPreview({
-          id: currentUserId,
-          name: "You",
-          level: "-",
-          avatar: null,
-        });
-      }
-    };
-
-    loadCurrentUserPreview().catch(() => {
-      setCurrentUserPreview(
-        currentUserId
-          ? {
-              id: currentUserId,
-              name: "You",
-              level: "-",
-              avatar: null,
-            }
-          : null,
-      );
-    });
-  }, [currentUserId, playerSlots]);
-
-  useEffect(() => {
-    setPendingSlotIndexes((current) =>
-      current.filter((slot) => !playerSlots[slot]),
-    );
-  }, [playerSlots]);
-
-  const isAlreadyJoined = useMemo(
-    () =>
-      Boolean(
-        currentUserId &&
-        match?.players?.some((playerId) => playerId === currentUserId),
-      ),
-    [currentUserId, match?.players],
-  );
-
-  const renderedPlayerSlots = useMemo(() => {
-    const fallbackPreview =
-      currentUserId && !currentUserPreview
-        ? {
-            id: currentUserId,
-            name: "You",
-            level: "-",
-            avatar: null,
-          }
-        : null;
-
-    return playerSlots.map((slot, index) => {
-      if (slot) return slot;
-      if (!pendingSlotIndexes.includes(index)) return null;
-      return currentUserPreview ?? fallbackPreview;
-    });
-  }, [currentUserId, currentUserPreview, pendingSlotIndexes, playerSlots]);
-
   const handleSlotPress = (slotIndex: number) => {
-    if (playerSlots[slotIndex]) return;
+    const status = onSlotPress(slotIndex);
 
-    if (!currentUserId) {
+    if (status === "sign_in_required") {
       openPopup("Sign in required", "Please log in before joining a match.");
       return;
     }
 
-    if (isAlreadyJoined) {
+    if (status === "already_joined") {
       openPopup("Already joined", "You already joined this match.");
-      return;
     }
-
-    setPendingSlotIndexes((current) =>
-      current.includes(slotIndex)
-        ? current.filter((slot) => slot !== slotIndex)
-        : [...current, slotIndex].sort((a, b) => a - b),
-    );
   };
 
   const handleBookPlace = async () => {
-    if (!match) return;
+    const status = await bookSelectedPlaces();
 
-    if (!currentUserId) {
+    if (status === "success") {
+      openPopup("Payment successful", "You paid.", "success");
+      return;
+    }
+
+    if (status === "sign_in_required") {
       openPopup("Sign in required", "Please log in before booking a place.");
       return;
     }
 
-    if (isAlreadyJoined) {
+    if (status === "already_joined") {
       openPopup("Already joined", "You already joined this match.");
       return;
     }
 
-    const requestedSlots = Array.from(
-      new Set(pendingSlotIndexes.filter((slot) => slot >= 0 && slot < 4)),
-    );
-
-    if (requestedSlots.length === 0) {
+    if (status === "select_slot") {
       openPopup("Select a slot", "Tap one or more + icons first.");
       return;
     }
 
-    setBookingBusy(true);
+    if (status === "match_unavailable") {
+      openPopup("Match unavailable", "This match is no longer available.");
+      return;
+    }
 
-    try {
-      const latestMatchSnap = await getDoc(doc(db, "matches", match.id));
-      if (!latestMatchSnap.exists()) {
-        openPopup("Match unavailable", "This match is no longer available.");
-        await refresh();
-        return;
-      }
-
-      const latestMatch: MatchDoc = {
-        id: latestMatchSnap.id,
-        ...(latestMatchSnap.data() as Omit<MatchDoc, "id">),
-      };
-
-      const latestSlots = Array.from({ length: 4 }, (_, index) => {
-        const value = latestMatch.players?.[index];
-        return typeof value === "string" && value.trim().length > 0
-          ? value
-          : null;
-      });
-
-      if (latestSlots.some((playerId) => playerId === currentUserId)) {
-        openPopup("Already joined", "You already joined this match.");
-        setPendingSlotIndexes([]);
-        await refresh();
-        return;
-      }
-
-      const hasUnavailableSlot = requestedSlots.some(
-        (slot) => latestSlots[slot] !== null,
+    if (status === "match_full") {
+      openPopup(
+        "Match full",
+        "This match is full. Your selected slots are no longer available.",
       );
-      const hasSpace = latestSlots.some((slot) => slot === null);
+      return;
+    }
 
-      if (hasUnavailableSlot || !hasSpace) {
-        openPopup(
-          "Match full",
-          "This match is full. Your selected slots are no longer available.",
-        );
-        setPendingSlotIndexes([]);
-        await refresh();
-        return;
-      }
-
-      requestedSlots.forEach((slot) => {
-        latestSlots[slot] = currentUserId;
-      });
-
-      const nextStatus = latestSlots.every(Boolean) ? "full" : "open";
-
-      // Fetch joining user's name
-      const joiningUserSnap = await getDoc(doc(db, "users", currentUserId));
-      const joiningUserName = joiningUserSnap.data()?.username ?? "Unknown";
-
-      // Mirror playerNames array to match the players slots
-      const latestMatchData = latestMatchSnap.data() as any;
-      const currentNames: (string | null)[] = Array.from(
-        { length: 4 },
-        (_, i) => latestMatchData.playerNames?.[i] ?? null,
-      );
-      requestedSlots.forEach((slot) => {
-        currentNames[slot] = joiningUserName;
-      });
-
-      await updateDoc(doc(db, "matches", match.id), {
-        players: latestSlots,
-        playerNames: currentNames,
-        status: nextStatus,
-      });
-      openPopup("Payment successful", "You paid.", "success");
-      setPendingSlotIndexes([]);
-      await refresh();
-    } catch (e) {
-      console.error(e);
+    if (status === "payment_failed") {
       openPopup("Payment failed", "Could not book your place right now.");
-    } finally {
-      setBookingBusy(false);
     }
   };
 
@@ -389,7 +242,13 @@ export default function FindMatchDetailPage() {
           </TouchableOpacity>
         </View>
 
-        <MatchLocationCard location={location} />
+        <MatchLocationCard
+          location={location}
+          onPressMoreInfo={() => {
+            if (!match.locationId) return;
+            router.push(`/(noHeaders)/makeMatch/${match.locationId}` as any);
+          }}
+        />
         <MatchInformationSection
           court={court}
           endRegistration={minutesToHHMM(match.startMinute)}

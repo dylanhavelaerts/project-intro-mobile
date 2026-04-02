@@ -10,9 +10,17 @@ import {
 } from "react-native";
 import { auth, db } from "@/config/firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
+import { SuggestedClubsSection } from "@/features/homepage/SuggestedClubsSection";
+import {
+  ImproveLevelSection,
+  SuggestedForYouSection,
+} from "@/features/homepage/ShowcaseSections";
+import { useSuggestedClubs } from "@/features/homepage/useSuggestedClubs";
 
 const Index = () => {
   const [username, setUsername] = useState("");
+  const { clubs: suggestedClubs, loading: suggestedClubsLoading } =
+    useSuggestedClubs();
 
   useEffect(() => {
     const fetchUsername = async () => {
@@ -32,6 +40,7 @@ const Index = () => {
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
     >
+      <View style={styles.surface}>
       <View style={styles.section1}>
         <Text style={[styles.titleText, styles.topMargin]}>
           The court is calling your name, {username}
@@ -83,13 +92,13 @@ const Index = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.titleText}>Suggested clubs for you</Text>
-        <Text style={styles.itemText}>
-          Child component for succested courts
-        </Text>
+        <SuggestedClubsSection
+          clubs={suggestedClubs}
+          loading={suggestedClubsLoading}
+        />
       </View>
 
-      <View style={styles.sectionActivities}>
+      <View style={styles.section}>
         <Text style={[styles.titleText, styles.activitiesTitle]}>
           Activities
         </Text>
@@ -131,25 +140,23 @@ const Index = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.titleText}>Suggested for you</Text>
-        <Text style={styles.itemText}>Add friends</Text>
+        <SuggestedForYouSection />
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.titleText}>Improve your level</Text>
-        <Text style={styles.itemText}>Child component</Text>
+        <ImproveLevelSection />
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.titleText}>Compete with others</Text>
-        <Text style={styles.itemText}>Open matches</Text>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={[styles.titleText, styles.sectionHeaderTitle]}>
+            Compete with others
+          </Text>
+          <Text style={styles.sectionHeaderSeeAll}>See all</Text>
+        </View>
+      </View>
       </View>
 
-      <Link href="/(noHeaders)/seedCourts" asChild>
-        <TouchableOpacity style={styles.seedButton}>
-          <Text style={styles.seedButtonText}>🌱 Seed DB (temp)</Text>
-        </TouchableOpacity>
-      </Link>
     </ScrollView>
   );
 };
@@ -157,27 +164,49 @@ const Index = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#335FFF",
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 28,
+  },
+  surface: {
+    marginTop: 2,
+    backgroundColor: "#f2f3f5",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingBottom: 16,
   },
   section1: {
-    marginBottom: 20,
+    marginBottom: 0,
     paddingHorizontal: 15,
   },
   section: {
-    marginBottom: 20,
-    paddingHorizontal: 15,
+    marginTop: 20,
   },
   titleText: {
     fontSize: 18,
-    fontWeight: "800",
+    fontWeight: "700",
     fontFamily: "System",
     marginBottom: 10,
     color: "#040b27",
   },
+  sectionHeaderRow: {
+    paddingHorizontal: 15,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  sectionHeaderTitle: {
+    marginBottom: 0,
+  },
+  sectionHeaderSeeAll: {
+    color: "#335FFF",
+    fontSize: 16,
+    fontWeight: "600",
+    fontFamily: "System",
+  },
   topMargin: {
-    marginTop: 25,
+    marginTop: 18,
   },
   itemContainer: {
     flexDirection: "row",
@@ -205,19 +234,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     textAlign: "center",
-  },
-  itemText: {
-    fontSize: 16,
-    color: "#4B5563",
-    paddingVertical: 8,
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#E5E7EB",
-  },
-  sectionActivities: {
-    marginBottom: 20,
+    fontFamily: "System",
+    fontWeight: "500",
+    color: "#1f2b37",
   },
   activitiesTitle: {
     paddingHorizontal: 15,
+    marginBottom: 12,
   },
   horizontalScrollPadding: {
     paddingLeft: 15,
@@ -249,18 +272,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#040b27",
     flexShrink: 1,
-  },
-  seedButton: {
-    backgroundColor: "#4CAF50",
-    margin: 20,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  seedButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 15,
+    fontFamily: "System",
+    fontWeight: "500",
   },
 });
 

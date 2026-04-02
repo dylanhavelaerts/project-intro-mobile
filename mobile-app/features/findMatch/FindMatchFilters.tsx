@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#cfcfcf",
   },
   filterScrollContent: {
     gap: 10,

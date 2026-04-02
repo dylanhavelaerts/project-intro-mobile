@@ -1,3 +1,10 @@
+/**
+ * This file contains the `useOpenMatches` custom hook, which encapsulates all state and logic related to fetching and managing the list of open matches in the 
+ * Find Match feature, including:
+ * - Fetching open matches from Firestore
+ * - Fetching and structuring related location, court, and user data for display in match cards
+ */
+
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 import {
@@ -22,6 +29,7 @@ import {
   FirestoreMatch,
   FirestoreUser,
 } from "./types";
+import { getPersistedFavoriteLocationIds } from "@/features/shared/favorites";
 
 type UseOpenMatchesResult = {
   matches: EnrichedMatchData[];
@@ -60,17 +68,7 @@ export const useOpenMatches = (): UseOpenMatchesResult => {
       const currentUserCity = currentUserData?.city?.trim().length
         ? currentUserData.city.trim()
         : "Antwerp";
-      const persistedFavorites = Array.isArray(
-        currentUserData?.favoriteLocationIds,
-      )
-        ? currentUserData.favoriteLocationIds
-        : Array.isArray(currentUserData?.favouriteLocationIds)
-          ? currentUserData.favouriteLocationIds
-          : [];
-
-      setFavoriteLocationIds(
-        persistedFavorites.filter((id): id is string => typeof id === "string"),
-      );
+      setFavoriteLocationIds(getPersistedFavoriteLocationIds(currentUserData));
 
       const matchesSnap = await getDocs(
         query(
@@ -153,22 +151,24 @@ export const useOpenMatches = (): UseOpenMatchesResult => {
         usersById: new Map(userEntries),
       };
 
-      const mappedMatches = rawMatches.map((match) =>
+      const mappedMatches = rawMatches.map((match) => 
         mapFirestoreMatchToCard(match, lookups, currentUserCity),
       );
 
-      const allClubs = locationEntries
-        .filter(([, location]): location is FirestoreLocation =>
-          Boolean(location),
-        )
-        .map(([id, location]) => ({
-          id,
-          name: location.name ?? "Unknown club",
-          city: location.city ?? "Unknown city",
-          distanceKm: estimateDistanceKmByCity(location.city, currentUserCity),
-          sport:
-            location.sport?.toLowerCase() === "tennis" ? "tennis" : "padel",
-        }));
+      const allClubs: ClubOption[] = locationEntries
+        .map(([id, location]) => {
+          if (!location) return null;
+
+          return {
+            id,
+            name: location.name ?? "Unknown club",
+            city: location.city ?? "Unknown city",
+            distanceKm: estimateDistanceKmByCity(location.city, currentUserCity),
+            sport:
+              location.sport?.toLowerCase() === "tennis" ? "tennis" : "padel",
+          };
+        })
+        .filter((club): club is ClubOption => Boolean(club));
 
       setMatches(mappedMatches);
       setClubs(allClubs.sort((a, b) => a.distanceKm - b.distanceKm));

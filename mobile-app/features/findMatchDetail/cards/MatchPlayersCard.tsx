@@ -1,5 +1,5 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { PlayerView } from "./types";
+import { PlayerView } from "../model/types";
 
 // ------------------------------------------------------------
 // SUBCOMPONENT

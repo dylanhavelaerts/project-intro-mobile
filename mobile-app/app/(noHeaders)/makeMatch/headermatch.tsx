@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, Pressable } from "react-native";
+import { View, StyleSheet, Image, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 
 const HeaderMatch = () => {

@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
 export type MatchData = {
@@ -53,12 +52,13 @@ const PlayerSlot = ({ player }: { player: PlayerData | null }) => {
 const MatchCard = ({ match, onPress }: MatchCardProps) => {
   const leftTeam = [match.players[0], match.players[1]];
   const rightTeam = [match.players[2], match.players[3]];
+  const handlePress = onPress ?? (() => undefined);
 
   return (
     <TouchableOpacity
       style={styles.matchCard}
       activeOpacity={0.7}
-      onPress={onPress ?? (() => router.push("/(noHeaders)/makeMatch" as any))}
+      onPress={handlePress}
     >
       {/* Date & Time */}
       <Text style={styles.matchDateTime}>

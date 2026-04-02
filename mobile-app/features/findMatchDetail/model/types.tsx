@@ -38,6 +38,7 @@ export type CourtDoc = {
 export type UserDoc = {
   username?: string;
   level?: string | number;
+  rating?: number;
   profilePhoto?: string | null;
 };
 

@@ -13,9 +13,6 @@ import {
 } from "@/features/findMatch/filters/filterUtils";
 import { useOpenMatches } from "@/features/findMatch/useOpenMatches";
 
-// ------------------------------------------------------------
-// SCREEN
-// ------------------------------------------------------------
 const FindMatch = () => {
   // ------------------------------------------------------------
   // DATA STATE
@@ -107,7 +104,7 @@ const FindMatch = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f0",
+    backgroundColor: "#f7f7f7",
   },
   floatingButton: {
     position: "absolute",

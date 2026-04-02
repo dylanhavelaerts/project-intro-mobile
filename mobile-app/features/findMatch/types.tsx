@@ -35,6 +35,7 @@ export type FirestoreCourt = {
 export type FirestoreUser = {
   username?: string;
   level?: string | number;
+  rating?: number;
   sport?: string;
   city?: string;
   favoriteLocationIds?: string[];

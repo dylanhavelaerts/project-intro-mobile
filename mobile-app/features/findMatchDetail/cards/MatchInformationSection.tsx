@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { CourtDoc } from "./types";
+import { CourtDoc } from "../model/types";
 
 // ------------------------------------------------------------
 // PROPS

@@ -26,13 +26,26 @@ export function getLevelLabel(rating: number): PlayerLevel {
   return band?.label ?? "Pro";
 }
 
-export function seedRatingFromLevel(level: string): number {
-  switch (level) {
+export function seedRatingFromLevel(level?: string | number): number {
+  if (typeof level === "number" && Number.isFinite(level)) {
+    return parseFloat(level.toFixed(2));
+  }
+
+  const normalized = String(level ?? "")
+    .trim()
+    .toLowerCase();
+
+  switch (normalized) {
     case "Beginner":
+    case "beginner":
       return 1.5;
     case "Intermediate":
+    case "intermediate":
       return 3.5;
+    case "Advanced":
+    case "advanced":
     case "Pro":
+    case "pro":
       return 5.5;
     default:
       return 1.5; // assignment says all new players start at 1.5
@@ -160,13 +173,13 @@ export async function recordDoublesMatchResult(
       ...winnerRefs.map((ref, i) =>
         updateDoc(ref, {
           rating: winnerUpdates[i],
-          level: getLevelLabel(winnerUpdates[i]),
+          level: winnerUpdates[i],
         }),
       ),
       ...loserRefs.map((ref, i) =>
         updateDoc(ref, {
           rating: loserUpdates[i],
-          level: getLevelLabel(loserUpdates[i]),
+          level: loserUpdates[i],
         }),
       ),
     ]);
@@ -210,11 +223,11 @@ export async function recordMatchResult(
     await Promise.all([
       updateDoc(winnerRef, {
         rating: newWinnerRating,
-        level: getLevelLabel(newWinnerRating),
+        level: newWinnerRating,
       }),
       updateDoc(loserRef, {
         rating: newLoserRating,
-        level: getLevelLabel(newLoserRating),
+        level: newLoserRating,
       }),
     ]);
   }

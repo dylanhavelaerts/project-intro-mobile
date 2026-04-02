@@ -12,7 +12,7 @@ type ClubFilterModalProps = {
   onToggleFavoriteOnly: (value: boolean) => void;
 };
 
-const DISTANCE_STEPS = [5, 10, 15, 20, 30, 40, 50];
+const DISTANCE_STEPS = [5, 10, 15, 20, 30, 40, 50, 100];
 
 export const ClubFilterModal = ({
   visible,

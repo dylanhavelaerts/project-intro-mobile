@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { router } from "expo-router";
 import {
   View,
@@ -6,22 +5,25 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
-  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-
-const SPORTS = ["Padel", "Tennis"];
-const LEVELS = ["Beginner", "Intermediate", "Advanced", "Pro"];
+import { SPORTS, LEVELS } from "@/features/welcome/model/registerOptions";
+import { useRegisterSelection } from "@/features/welcome/hooks/useRegisterSelection";
 
 const RegisterStep1 = () => {
-  const [selectedSport, setSelectedSport] = useState<string | null>(null);
-  const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+  const {
+    selectedSport,
+    setSelectedSport,
+    selectedLevel,
+    setSelectedLevel,
+    canContinue,
+  } = useRegisterSelection();
 
   const handleContinue = () => {
     if (selectedSport && selectedLevel) {
       router.push({
         pathname: "/(noHeaders)/welcome/register/credentials",
-        params: { sport: selectedSport, level: selectedLevel }, //new players maybe change to 1.5 -> look at PDF of assignment
+        params: { sport: selectedSport, level: selectedLevel },
       });
     }
   };
@@ -102,10 +104,10 @@ const RegisterStep1 = () => {
       <Pressable
         style={[
           styles.continueButton,
-          (!selectedSport || !selectedLevel) && styles.continueButtonDisabled,
+          !canContinue && styles.continueButtonDisabled,
         ]}
         onPress={handleContinue}
-        disabled={!selectedSport || !selectedLevel}
+        disabled={!canContinue}
       >
         <Text style={styles.continueButtonText}>Continue</Text>
       </Pressable>

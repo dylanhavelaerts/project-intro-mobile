@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { router } from "expo-router";
 import {
   View,
@@ -10,59 +9,43 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/config/firebaseConfig";
+import { useLoginForm } from "@/features/welcome/hooks/useLoginForm";
+
+const getLoginErrorMessage = (errorCode: string) => {
+  if (errorCode === "auth/user-not-found") {
+    return "No account found with this email.";
+  }
+  if (errorCode === "auth/wrong-password") {
+    return "Incorrect password.";
+  }
+  if (errorCode === "auth/invalid-email") {
+    return "Invalid email address.";
+  }
+  if (errorCode === "auth/invalid-credential") {
+    return "Invalid email or password.";
+  }
+  if (errorCode === "auth/too-many-requests") {
+    return "Too many attempts. Please try again later.";
+  }
+
+  return "Login failed. Please try again.";
+};
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
-  const validate = () => {
-    const newErrors: { [key: string]: string } = {};
-
-    if (!email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      // check for valid email address
-      newErrors.email = "Please enter a valid email";
-    }
-
-    if (!password) {
-      newErrors.password = "Password is required";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const { email, setEmail, password, setPassword, loading, errors, submit } =
+    useLoginForm();
 
   const handleLogin = async () => {
-    if (!validate()) return;
+    const result = await submit();
 
-    setLoading(true);
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
+    if (result.ok) {
       router.replace("/(main)/homepage/home" as any);
-    } catch (error: any) {
-      let errorMessage = "Login failed. Please try again.";
-
-      if (error.code === "auth/user-not-found") {
-        errorMessage = "No account found with this email.";
-      } else if (error.code === "auth/wrong-password") {
-        errorMessage = "Incorrect password.";
-      } else if (error.code === "auth/invalid-email") {
-        errorMessage = "Invalid email address.";
-      } else if (error.code === "auth/invalid-credential") {
-        errorMessage = "Invalid email or password.";
-      } else if (error.code === "auth/too-many-requests") {
-        errorMessage = "Too many attempts. Please try again later.";
-      }
-
-      Alert.alert("Error", errorMessage);
-    } finally {
-      setLoading(false);
+      return;
     }
+
+    if (result.errorCode === "validation") return;
+
+    Alert.alert("Error", getLoginErrorMessage(result.errorCode));
   };
 
   return (
@@ -131,7 +114,7 @@ const Login = () => {
 
       {/* Register Link */}
       <View style={styles.registerContainer}>
-        <Text style={styles.registerText}>Don't have an account? </Text>
+        <Text style={styles.registerText}>Don&apos;t have an account? </Text>
         <Pressable
           onPress={() => router.replace("/(noHeaders)/welcome/register" as any)}
         >

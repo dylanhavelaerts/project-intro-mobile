@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   View,
@@ -10,9 +9,21 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import { auth, db } from "@/config/firebaseConfig";
+import { useRegisterCredentialsForm } from "@/features/welcome/hooks/useRegisterCredentialsForm";
+
+const getRegisterErrorMessage = (errorCode: string) => {
+  if (errorCode === "auth/email-already-in-use") {
+    return "This email is already registered.";
+  }
+  if (errorCode === "auth/invalid-email") {
+    return "Invalid email address.";
+  }
+  if (errorCode === "auth/weak-password") {
+    return "Password is too weak.";
+  }
+
+  return "Registration failed. Please try again.";
+};
 
 const RegisterCredentials = () => {
   const { sport, level } = useLocalSearchParams<{
@@ -20,89 +31,35 @@ const RegisterCredentials = () => {
     level: string;
   }>();
 
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
-  const validate = () => {
-    const newErrors: { [key: string]: string } = {};
-
-    if (!username.trim()) {
-      newErrors.username = "Username is required";
-    } else if (username.length < 3) {
-      newErrors.username = "Username must be at least 3 characters";
-    }
-
-    if (!email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = "Please enter a valid email";
-    }
-
-    if (!password) {
-      newErrors.password = "Password is required";
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    if (!confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const {
+    username,
+    setUsername,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    confirmPassword,
+    setConfirmPassword,
+    loading,
+    errors,
+    submit,
+  } = useRegisterCredentialsForm({
+    sport: sport ?? "Padel",
+    level: level ?? "Beginner",
+  });
 
   const handleRegister = async () => {
-    if (!validate()) return;
+    const result = await submit();
 
-    setLoading(true);
-    try {
-      // Create user with Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
-      const user = userCredential.user;
-
-      // Save user profile to Firestore
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
-        username: username.trim(),
-        email: email.toLowerCase().trim(),
-        sport: sport,
-        level: level,
-        createdAt: new Date().toISOString(),
-        profilePhoto: null,
-      });
-
-      Alert.alert("Success", "Account created successfully!", [
-        {
-          text: "OK",
-          onPress: () => router.replace("/(noHeaders)/welcome/login" as any),
-        },
-      ]);
-    } catch (error: any) {
-      let errorMessage = "Registration failed. Please try again.";
-
-      if (error.code === "auth/email-already-in-use") {
-        errorMessage = "This email is already registered.";
-      } else if (error.code === "auth/invalid-email") {
-        errorMessage = "Invalid email address.";
-      } else if (error.code === "auth/weak-password") {
-        errorMessage = "Password is too weak.";
-      }
-
-      Alert.alert("Error", errorMessage);
-    } finally {
-      setLoading(false);
+    if (result.ok) {
+      router.replace("/(noHeaders)/welcome/login" as any);
+      Alert.alert("Success", "Account created successfully! Please log in.");
+      return;
     }
+
+    if (result.errorCode === "validation") return;
+
+    Alert.alert("Error", getRegisterErrorMessage(result.errorCode));
   };
 
   return (

@@ -1,3 +1,11 @@
+/**
+ * This file contains all mapping and formatting logic related to the Find Match feature, including:
+ * - Mapping Firestore match documents to enriched data structures optimized for UI display in match cards
+ * - Formatting of dates, times, levels, and prices for display
+ * - Estimating distances based on city names when geolocation data is not available
+ * - Sorting logic for ordering matches by date and time
+ */
+
 import {
   EnrichedMatchData,
   FirestoreMatch,
@@ -37,7 +45,22 @@ const dateLabelFromDateKey = (dateKey?: string) => {
 
 const formatLevel = (level?: string | number) => {
   if (level === undefined || level === null || level === "") return "-";
-  return String(level).replace(".", ",");
+
+  if (typeof level === "number" && Number.isFinite(level)) {
+    return level.toFixed(1);
+  }
+
+  const numeric = Number(level);
+  if (Number.isFinite(numeric)) {
+    return numeric.toFixed(1);
+  }
+
+  const normalized = String(level).toLowerCase().trim();
+  if (normalized === "beginner") return "1.5";
+  if (normalized === "intermediate") return "3.5";
+  if (normalized === "advanced" || normalized === "pro") return "5.5";
+
+  return "-";
 };
 
 const formatPrice = (pricePerPlayer?: number) => {
@@ -138,7 +161,7 @@ export const mapFirestoreMatchToCard = (
     const user = lookups.usersById.get(userId);
     return {
       name: user?.username ?? "Player",
-      rating: formatLevel(user?.level),
+      rating: formatLevel(user?.rating ?? user?.level),
       avatar: null,
     };
   });

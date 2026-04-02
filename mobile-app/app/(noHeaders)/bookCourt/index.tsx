@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   View,
   Image,
@@ -10,155 +10,31 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import CourtCard, { CourtData } from "../../../components/CourtCard";
-import { auth, db } from "@/config/firebaseConfig";
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-  updateDoc,
-} from "firebase/firestore";
+import CourtCard from "../../../components/CourtCard";
 import { BookCourtFilters } from "@/features/bookCourt/filters/BookCourtFilters";
 import {
   dateKey,
   DEFAULT_BOOK_COURT_FILTERS,
-  getFilteredCourts,
 } from "@/features/bookCourt/filters/filterUtils";
-import { BookCourtSport } from "@/features/bookCourt/filters/types";
-
-type BookCourtListItem = CourtData & {
-  sport: BookCourtSport;
-  openingHours?: string;
-};
+import { getVisibleBookCourts } from "@/features/bookCourt/selectors";
+import { BookCourtIconFilter } from "@/features/bookCourt/types";
+import { useBookCourtData } from "@/features/bookCourt/useBookCourtData";
 
 const BookCourt = () => {
-  const [activeIcon, setActiveIcon] = useState<"location" | "heart">(
-    "location",
-  );
-  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-  const [courts, setCourts] = useState<BookCourtListItem[]>([]);
+  const [activeIcon, setActiveIcon] = useState<BookCourtIconFilter>("location");
   const [filters, setFilters] = useState(DEFAULT_BOOK_COURT_FILTERS);
-  const [loading, setLoading] = useState(true);
+  const { loading, courts, favoriteIds, toggleFavorite } = useBookCourtData();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [locSnap, courtsSnap] = await Promise.all([
-          getDocs(collection(db, "locations")),
-          getDocs(collection(db, "courts")),
-        ]);
-
-        const currentUser = auth.currentUser;
-        if (currentUser) {
-          const userSnap = await getDoc(doc(db, "users", currentUser.uid));
-          const userData = userSnap.exists() ? userSnap.data() : null;
-
-          const persistedFavorites = Array.isArray(
-            userData?.favoriteLocationIds,
-          )
-            ? userData.favoriteLocationIds
-            : Array.isArray(userData?.favouriteLocationIds)
-              ? userData.favouriteLocationIds
-              : [];
-
-          setFavoriteIds(
-            persistedFavorites.filter(
-              (id: unknown): id is string => typeof id === "string",
-            ),
-          );
-        }
-
-        const courtsByLocation: Record<
-          string,
-          { pricePerSlot: number; slotDurationMinutes: number }[]
-        > = {};
-        courtsSnap.forEach((doc) => {
-          const d = doc.data();
-          if (!courtsByLocation[d.locationId])
-            courtsByLocation[d.locationId] = [];
-          courtsByLocation[d.locationId].push(d as any);
-        });
-
-        const mapped: BookCourtListItem[] = locSnap.docs.map((doc) => {
-          const loc = doc.data();
-          const locCourts = courtsByLocation[doc.id] ?? [];
-          const minPrice =
-            locCourts.length > 0
-              ? Math.min(...locCourts.map((c) => c.pricePerSlot))
-              : 0;
-          const duration = locCourts[0]?.slotDurationMinutes
-            ? `${locCourts[0].slotDurationMinutes}min`
-            : "90min";
-
-          return {
-            id: doc.id,
-            name: loc.name,
-            image: { uri: loc.imageUrl },
-            price: `€ ${minPrice}`,
-            duration,
-            distance: loc.city,
-            location: `${loc.address}, ${loc.city}`,
-            timeSlots: [],
-            sport: loc.sport?.toLowerCase() === "tennis" ? "tennis" : "padel",
-            openingHours: loc.openingHours,
-          };
-        });
-
-        setCourts(mapped);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  const toggleFavorite = async (id: string) => {
-    const nextFavorites = favoriteIds.includes(id)
-      ? favoriteIds.filter((fId) => fId !== id)
-      : [...favoriteIds, id];
-
-    setFavoriteIds(nextFavorites);
-
-    const currentUser = auth.currentUser;
-    if (!currentUser) return;
-
-    const userRef = doc(db, "users", currentUser.uid);
-
-    try {
-      const userSnap = await getDoc(userRef);
-
-      if (userSnap.exists()) {
-        await updateDoc(userRef, {
-          favoriteLocationIds: nextFavorites,
-        });
-      } else {
-        await setDoc(
-          userRef,
-          {
-            uid: currentUser.uid,
-            favoriteLocationIds: nextFavorites,
-          },
-          { merge: true },
-        );
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const filteredCourts = useMemo(
-    () => getFilteredCourts(courts, filters),
-    [courts, filters],
+  const courtsToShow = useMemo(
+    () =>
+      getVisibleBookCourts({
+        courts,
+        filters,
+        favoriteIds,
+        activeIcon,
+      }),
+    [activeIcon, courts, favoriteIds, filters],
   );
-
-  const courtsToShow = filteredCourts
-    .map((court) => ({ ...court, isFavorite: favoriteIds.includes(court.id) }))
-    .filter((court) => (activeIcon === "heart" ? court.isFavorite : true));
 
   if (loading) {
     return (

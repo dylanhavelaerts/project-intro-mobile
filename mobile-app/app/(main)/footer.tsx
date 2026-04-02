@@ -1,16 +1,21 @@
-import { router } from "expo-router";
-import { View, Text, StyleSheet, Image, TouchableOpacity, Pressable } from "react-native";
+import { router, usePathname } from "expo-router";
+import { View, Text, StyleSheet, Image, Pressable } from "react-native";
 
 const Footer = () => {
+  const pathname = usePathname();
+  const isHomeActive = pathname?.includes("/homepage/home");
+
   return (
     <View style={styles.container}>
       <View style={styles.menuContainer}>
         <View style={styles.itemWrapper}>
           <Image
             source={require("../../assets/images/homepage/home.png")}
-            style={styles.icon}
+            style={[styles.icon, isHomeActive && styles.iconActive]}
           />
-          <Text style={styles.menuText}>Home</Text>
+          <Text style={[styles.menuText, isHomeActive && styles.menuTextActive]}>
+            Home
+          </Text>
         </View>
 
         <View style={styles.itemWrapper}>
@@ -46,6 +51,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     paddingBottom: 20,
   },
+  menuTextActive: {
+    color: "#335FFF",
+    fontWeight: "600",
+  },
   menuContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -60,6 +69,9 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     resizeMode: "contain",
     tintColor: "grey",
+  },
+  iconActive: {
+    tintColor: "#335FFF",
   },
 });
 

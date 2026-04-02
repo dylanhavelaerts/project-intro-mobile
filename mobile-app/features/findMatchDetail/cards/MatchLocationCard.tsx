@@ -1,18 +1,22 @@
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { LocationDoc } from "./types";
+import { LocationDoc } from "../model/types";
 
 // ------------------------------------------------------------
 // PROPS
 // ------------------------------------------------------------
 type MatchLocationCardProps = {
   location: LocationDoc | null;
+  onPressMoreInfo?: () => void;
 };
 
 // ------------------------------------------------------------
 // COMPONENT
 // ------------------------------------------------------------
-export const MatchLocationCard = ({ location }: MatchLocationCardProps) => {
+export const MatchLocationCard = ({
+  location,
+  onPressMoreInfo,
+}: MatchLocationCardProps) => {
   return (
     <View style={styles.locationCard}>
       {location?.imageUrl ? (
@@ -35,7 +39,9 @@ export const MatchLocationCard = ({ location }: MatchLocationCardProps) => {
           {location?.city ? `, ${location.city}` : ""}
         </Text>
         <View style={styles.moreInfoRow}>
-          <Text style={styles.moreInfo}>More info</Text>
+          <Pressable onPress={onPressMoreInfo} disabled={!onPressMoreInfo}>
+            <Text style={styles.moreInfo}>More info</Text>
+          </Pressable>
         </View>
       </View>
 

@@ -1,3 +1,8 @@
+/**
+ * Hook for loading and managing match detail data, including match info, location, court, and players.
+ * Handles loading state, errors, and provides a refresh function.
+ */
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   collection,
@@ -8,8 +13,14 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "@/config/firebaseConfig";
-import { buildTimeLabel, formatLevel } from "./matchDetailFormatters";
-import { CourtDoc, LocationDoc, MatchDoc, PlayerView, UserDoc } from "./types";
+import { buildTimeLabel, formatLevel } from "../model/matchDetailFormatters";
+import {
+  CourtDoc,
+  LocationDoc,
+  MatchDoc,
+  PlayerView,
+  UserDoc,
+} from "../model/types";
 
 type BookingDoc = {
   courtId?: string;
@@ -158,7 +169,7 @@ export const useMatchDetail = (matchId?: string): UseMatchDetailResult => {
         return {
           id: uid,
           name: user?.username ?? "Player",
-          level: formatLevel(user?.level),
+          level: formatLevel(user?.rating ?? user?.level),
           avatar: user?.profilePhoto ?? null,
         };
       });

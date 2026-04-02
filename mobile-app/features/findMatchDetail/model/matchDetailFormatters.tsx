@@ -27,7 +27,22 @@ export const minutesToHHMM = (totalMinutes?: number) => {
 
 export const formatLevel = (level?: string | number) => {
   if (level === undefined || level === null || level === "") return "-";
-  return String(level).replace(".", ",");
+
+  if (typeof level === "number" && Number.isFinite(level)) {
+    return level.toFixed(1);
+  }
+
+  const numeric = Number(level);
+  if (Number.isFinite(numeric)) {
+    return numeric.toFixed(1);
+  }
+
+  const normalized = String(level).toLowerCase().trim();
+  if (normalized === "beginner") return "1.5";
+  if (normalized === "intermediate") return "3.5";
+  if (normalized === "advanced" || normalized === "pro") return "5.5";
+
+  return "-";
 };
 
 export const formatPrice = (value?: number) => {
