@@ -85,7 +85,9 @@ const BookCourt = () => {
             />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => setActiveIcon("heart")}
+            onPress={() =>
+              setActiveIcon((prev) => (prev === "heart" ? "location" : "heart"))
+            }
             activeOpacity={0.7}
           >
             <Image

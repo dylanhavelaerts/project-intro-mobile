@@ -15,6 +15,7 @@ import {
   isValidSet,
 } from "../../../config/rating";
 import type { SetScore } from "../../../config/rating";
+import { auth } from "@/config/firebaseConfig";
 
 const EMPTY_SET: SetScore = { team1: 0, team2: 0 };
 
@@ -60,6 +61,10 @@ export default function SubmitResultScreen() {
   const teamBLabel =
     teamBPlayerNames.filter((name) => name.trim().length > 0).join(" & ") ||
     "Team B";
+  const currentUserId = auth.currentUser?.uid ?? null;
+  const isParticipant =
+    currentUserId != null &&
+    [...teamAPlayerIds, ...teamBPlayerIds].includes(currentUserId);
 
   // Up to 3 sets, start with 2 visible
   const [sets, setSets] = useState<SetScore[]>([
@@ -89,6 +94,11 @@ export default function SubmitResultScreen() {
 
   const handleSubmit = async () => {
     setError(null);
+
+    if (!isParticipant) {
+      setError("Only players in Team A or Team B can submit this result.");
+      return;
+    }
 
     // Validate all entered sets
     for (let i = 0; i < sets.length; i++) {

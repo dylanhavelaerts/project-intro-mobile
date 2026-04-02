@@ -167,6 +167,9 @@ export default function FindMatchDetailPage() {
     );
   }
 
+  const isMatchParticipant =
+    currentUserId != null && (match.players ?? []).includes(currentUserId);
+
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -190,8 +193,8 @@ export default function FindMatchDetailPage() {
           pendingSlotIndexes={pendingSlotIndexes}
           onSlotPress={handleSlotPress}
         />
-        {/* Simulate Match — only visible to creator when match is full */}
-        {match.createdBy === currentUserId && match.status === "full" && (
+        {/* Submit Result — only visible to participants when match is full */}
+        {match.status === "full" && isMatchParticipant && (
           <View style={styles.simulateWrap}>
             <TouchableOpacity
               style={styles.simulateButton}
@@ -222,7 +225,7 @@ export default function FindMatchDetailPage() {
                 } as any)
               }
             >
-              <Text style={styles.simulateText}>▶ Simulate Match</Text>
+              <Text style={styles.simulateText}>▶ Submit Result</Text>
             </TouchableOpacity>
           </View>
         )}
