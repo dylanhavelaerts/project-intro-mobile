@@ -1,5 +1,5 @@
 /**
- * Hook for managing state and logic related to making a match at a venue, including loading venue details, 
+ * Hook for managing state and logic related to making a match at a venue, including loading venue details,
  * managing bookings and matches for a selected date, and handling booking and match creation actions.
  * - Loads venue details (location and courts) based on the provided location ID
  * - Generates available time slots based on venue opening hours and selected match duration
@@ -23,7 +23,12 @@ import {
   joinMatch,
   loadVenueDetails,
 } from "../services/makeMatchService";
-import type { Booking, DurationMinutes, MatchDoc, MatchTab } from "../model/types";
+import type {
+  Booking,
+  DurationMinutes,
+  MatchDoc,
+  MatchTab,
+} from "../model/types";
 import {
   generateDays,
   minutesToHHMM,
@@ -299,7 +304,10 @@ export const useVenueMakeMatch = (locationId?: string) => {
 
       setShowCreateMatch(false);
       await loadBookingsAndMatches();
-      Alert.alert("Match created", "Your match is now visible in Open Matches.");
+      Alert.alert(
+        "Match created",
+        "Your match is now visible in Open Matches.",
+      );
     } catch (e) {
       Alert.alert("Error", String(e));
     } finally {
@@ -322,6 +330,13 @@ export const useVenueMakeMatch = (locationId?: string) => {
       }
       if (result.status === "full") {
         Alert.alert("Match full", "This match is already full.");
+        return;
+      }
+      if (result.status === "level_mismatch") {
+        Alert.alert(
+          "Level restriction",
+          "Your level is outside this match level range.",
+        );
         return;
       }
 

@@ -1,5 +1,5 @@
 /**
- * Service module for handling operations related to making a match, including loading venue details, 
+ * Service module for handling operations related to making a match, including loading venue details,
  * fetching bookings and matches for a specific day, creating bookings and matches, and joining matches.
  * - loadVenueDetails: Fetches location and court details for a given location ID
  * - fetchBookingsForDay: Fetches confirmed bookings for a specific location and date
@@ -18,15 +18,23 @@ import {
   where,
 } from "firebase/firestore";
 import { auth, db } from "@/config/firebaseConfig";
+import { seedRatingFromLevel } from "@/config/rating";
 import type { Court } from "@/types";
-import type { Booking, DurationMinutes, MatchDoc, VenueDetails } from "../model/types";
+import type {
+  Booking,
+  DurationMinutes,
+  MatchDoc,
+  VenueDetails,
+} from "../model/types";
 
 export const loadVenueDetails = async (
   locationId: string,
 ): Promise<VenueDetails> => {
   const [locSnap, courtsSnap] = await Promise.all([
     getDoc(doc(db, "locations", locationId)),
-    getDocs(query(collection(db, "courts"), where("locationId", "==", locationId))),
+    getDocs(
+      query(collection(db, "courts"), where("locationId", "==", locationId)),
+    ),
   ]);
 
   if (!locSnap.exists()) {
@@ -130,7 +138,6 @@ export const createMatch = async (params: {
 
 export const joinMatch = async (matchId: string) => {
   const userId = auth.currentUser?.uid ?? "anonymous";
-  const userName = await getUserName(userId);
 
   const matchRef = doc(db, "matches", matchId);
   const matchSnap = await getDoc(matchRef);
@@ -144,6 +151,27 @@ export const joinMatch = async (matchId: string) => {
   }
   if ((matchData.players?.length ?? 0) >= 4) {
     return { status: "full" as const };
+  }
+
+  const userSnap = await getDoc(doc(db, "users", userId));
+  const userData = userSnap.data() as
+    | { username?: string; rating?: number; level?: string | number }
+    | undefined;
+  const userName = userData?.username ?? "Unknown";
+
+  const rawUserLevel = userData?.rating ?? userData?.level;
+  const numericUserLevel =
+    typeof rawUserLevel === "number" ? rawUserLevel : Number(rawUserLevel);
+  const userLevel = Number.isFinite(numericUserLevel)
+    ? numericUserLevel
+    : seedRatingFromLevel(rawUserLevel);
+
+  const minLevel = Number(matchData.levelMin);
+  const maxLevel = Number(matchData.levelMax);
+  const hasValidRange = Number.isFinite(minLevel) && Number.isFinite(maxLevel);
+
+  if (hasValidRange && (userLevel < minLevel || userLevel > maxLevel)) {
+    return { status: "level_mismatch" as const };
   }
 
   await updateDoc(matchRef, {

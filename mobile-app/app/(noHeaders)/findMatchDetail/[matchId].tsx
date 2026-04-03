@@ -141,6 +141,14 @@ export default function FindMatchDetailPage() {
       return;
     }
 
+    if (status === "level_mismatch") {
+      openPopup(
+        "Level restriction",
+        "Your level is outside this match level range.",
+      );
+      return;
+    }
+
     if (status === "payment_failed") {
       openPopup("Payment failed", "Could not book your place right now.");
     }

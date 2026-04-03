@@ -7,6 +7,7 @@
 
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/config/firebaseConfig";
+import { seedRatingFromLevel } from "@/config/rating";
 import { MatchDoc } from "../model/types";
 
 export type BookPlaceStatus =
@@ -15,7 +16,8 @@ export type BookPlaceStatus =
   | "already_joined"
   | "select_slot"
   | "match_unavailable"
-  | "match_full";
+  | "match_full"
+  | "level_mismatch";
 
 type BookPlaceInput = {
   matchId: string;
@@ -66,14 +68,33 @@ export const bookMatchPlaces = async ({
     return "match_full";
   }
 
+  const joiningUserSnap = await getDoc(doc(db, "users", currentUserId));
+  const joiningUserData = joiningUserSnap.data() as
+    | { username?: string; rating?: number; level?: string | number }
+    | undefined;
+
+  const rawUserLevel = joiningUserData?.rating ?? joiningUserData?.level;
+  const numericUserLevel =
+    typeof rawUserLevel === "number" ? rawUserLevel : Number(rawUserLevel);
+  const userLevel = Number.isFinite(numericUserLevel)
+    ? numericUserLevel
+    : seedRatingFromLevel(rawUserLevel);
+
+  const minLevel = Number(latestMatch.levelMin);
+  const maxLevel = Number(latestMatch.levelMax);
+  const hasValidRange = Number.isFinite(minLevel) && Number.isFinite(maxLevel);
+
+  if (hasValidRange && (userLevel < minLevel || userLevel > maxLevel)) {
+    return "level_mismatch";
+  }
+
   requestedSlots.forEach((slot) => {
     latestSlots[slot] = currentUserId;
   });
 
   const nextStatus = latestSlots.every(Boolean) ? "full" : "open";
 
-  const joiningUserSnap = await getDoc(doc(db, "users", currentUserId));
-  const joiningUserName = joiningUserSnap.data()?.username ?? "Unknown";
+  const joiningUserName = joiningUserData?.username ?? "Unknown";
 
   const latestMatchData = latestMatchSnap.data() as any;
   const currentNames: (string | null)[] = Array.from(
