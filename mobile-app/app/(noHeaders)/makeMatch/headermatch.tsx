@@ -5,41 +5,46 @@ const HeaderMatch = () => {
   const router = useRouter();
 
   return (
-    <View style={styles.content}>
-      <Pressable onPress={() => router.back()}>
+    <View style={styles.headerContainer}>
+      <View style={styles.headerSide}>
+        <Pressable onPress={() => router.back()}>
+          <Image
+            source={require("@/assets/images/bookCourt/back.png")}
+            style={styles.headerIcon}
+          />
+        </Pressable>
+      </View>
+
+      <View style={styles.headerSideRight}>
         <Image
-          source={require("@/assets/images/bookCourt/back.png")}
-          style={styles.icon}
+          source={require("@/assets/resources/share.png")}
+          style={styles.headerIcon}
         />
-      </Pressable>
-      <Image
-        source={require("@/assets/resources/share.png")}
-        style={styles.icon}
-      />
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  content: {
-    backgroundColor: "#FFF",
-    height: "10%",
-    textAlign: "left",
-    paddingLeft: 2,
-    display: "flex",
+  headerContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    padding: 25,
+    paddingTop: 40,
+    paddingBottom: 10,
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
-  backArrow: {
-    fontSize: 20,
-    margin: 20,
-    marginBottom: 40,
+  headerSide: {
+    flex: 1,
+    alignItems: "flex-start",
   },
-  icon: {
-    width: 24,
-    height: 24,
-    margin: 20,
-    marginBottom: 40,
+  headerSideRight: {
+    flex: 1,
+    alignItems: "flex-end",
+  },
+  headerIcon: {
+    width: 32,
+    height: 32,
   },
 });
 
