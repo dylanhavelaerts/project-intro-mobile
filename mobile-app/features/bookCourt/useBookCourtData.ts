@@ -5,7 +5,8 @@
  * - Providing a toggle function for marking/unmarking favorite locations
  */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import { auth } from "@/config/firebaseConfig";
 import {
   fetchBookCourtListItems,
@@ -19,37 +20,45 @@ export const useBookCourtData = () => {
   const [courts, setCourts] = useState<BookCourtListItem[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
 
+  const load = useCallback(async () => {
+    setLoading(true);
+
+    try {
+      const currentUser = auth.currentUser;
+      const [courtItems, persistedFavorites] = await Promise.all([
+        fetchBookCourtListItems(),
+        currentUser
+          ? fetchUserFavoriteLocationIds(currentUser.uid)
+          : Promise.resolve([]),
+      ]);
+
+      setCourts(courtItems);
+      setFavoriteIds(persistedFavorites);
+    } catch (error) {
+      console.error(error);
+      setCourts([]);
+      setFavoriteIds([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-
-      try {
-        const currentUser = auth.currentUser;
-        const [courtItems, persistedFavorites] = await Promise.all([
-          fetchBookCourtListItems(),
-          currentUser
-            ? fetchUserFavoriteLocationIds(currentUser.uid)
-            : Promise.resolve([]),
-        ]);
-
-        setCourts(courtItems);
-        setFavoriteIds(persistedFavorites);
-      } catch (error) {
-        console.error(error);
-        setCourts([]);
-        setFavoriteIds([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     load().catch((error) => {
       console.error(error);
       setLoading(false);
       setCourts([]);
       setFavoriteIds([]);
     });
-  }, []);
+  }, [load]);
+
+  useFocusEffect(
+    useCallback(() => {
+      load().catch((error) => {
+        console.error(error);
+      });
+    }, [load]),
+  );
 
   const toggleFavorite = async (locationId: string) => {
     const previousFavoriteIds = favoriteIds;

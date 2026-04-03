@@ -56,8 +56,11 @@ export default function VenueMakeMatch() {
     bookingBusy,
     dateKey,
     days,
+    isFavorite,
+    favoriteBusy,
     isCourtAvailable,
     priceForDuration,
+    toggleVenueFavorite,
     handleBook,
     handleCreateMatch,
     handleJoinMatch,
@@ -95,7 +98,20 @@ export default function VenueMakeMatch() {
             </Text>
           </View>
 
-          <Text style={{ fontSize: 20 }}>♡</Text>
+          <Pressable
+            onPress={toggleVenueFavorite}
+            disabled={favoriteBusy}
+            hitSlop={8}
+          >
+            <Image
+              source={
+                isFavorite
+                  ? require("@/assets/images/bookCourt/heart-black.png")
+                  : require("@/assets/images/bookCourt/heart.png")
+              }
+              style={styles.venueHeartIcon}
+            />
+          </Pressable>
         </View>
 
         <View style={styles.viewstyletwo}>
@@ -604,6 +620,11 @@ const styles = StyleSheet.create({
   venueadress: {
     color: "#888",
     fontSize: 14,
+  },
+  venueHeartIcon: {
+    width: 20,
+    height: 20,
+    tintColor: "#111",
   },
 
   viewstyletwo: {

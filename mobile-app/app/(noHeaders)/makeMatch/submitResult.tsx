@@ -55,12 +55,6 @@ export default function SubmitResultScreen() {
     "Player B2",
   ]).slice(0, 2);
 
-  const teamALabel =
-    teamAPlayerNames.filter((name) => name.trim().length > 0).join(" & ") ||
-    "Team A";
-  const teamBLabel =
-    teamBPlayerNames.filter((name) => name.trim().length > 0).join(" & ") ||
-    "Team B";
   const currentUserId = auth.currentUser?.uid ?? null;
   const isParticipant =
     currentUserId != null &&
@@ -154,7 +148,6 @@ export default function SubmitResultScreen() {
   if (done) {
     return (
       <View style={styles.container}>
-        <Text style={styles.emoji}>🏆</Text>
         <Text style={styles.title}>{winner} wins!</Text>
         {isCompetitive && (
           <Text style={styles.sub}>Player ratings have been updated.</Text>
@@ -164,7 +157,7 @@ export default function SubmitResultScreen() {
         )}
         <TouchableOpacity
           style={styles.btn}
-          onPress={() => router.replace("/")}
+          onPress={() => router.replace("/(main)/homepage/home" as any)}
         >
           <Text style={styles.btnText}>Back to Home</Text>
         </TouchableOpacity>
@@ -175,20 +168,16 @@ export default function SubmitResultScreen() {
   // ─── Main ─────────────────────────────────────────────
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Enter Match Results</Text>
+      <Text style={styles.title}>The Results</Text>
       <Text style={styles.sub}>Team A vs Team B</Text>
-      <Text style={styles.sub}>{teamALabel}</Text>
-      <Text style={styles.sub}>{teamBLabel}</Text>
 
       {isCompetitive ? (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>
-            ⚔️ Competitive — ratings will update
-          </Text>
+          <Text style={styles.badgeText}>Competitive - ratings will update</Text>
         </View>
       ) : (
         <View style={[styles.badge, styles.badgeFriendly]}>
-          <Text style={styles.badgeText}>🤝 Friendly — ratings unchanged</Text>
+          <Text style={styles.badgeText}>Friendly - ratings unchanged</Text>
         </View>
       )}
 
@@ -265,7 +254,6 @@ const styles = StyleSheet.create({
     gap: 16,
     backgroundColor: "#fff",
   },
-  emoji: { fontSize: 48 },
   title: { fontSize: 22, fontWeight: "700", textAlign: "center" },
   sub: { fontSize: 14, color: "#666", textAlign: "center" },
   badge: {

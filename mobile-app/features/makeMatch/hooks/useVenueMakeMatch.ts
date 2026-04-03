@@ -9,6 +9,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
+import { auth } from "@/config/firebaseConfig";
+import {
+  fetchUserFavoriteLocationIds,
+  persistUserFavoriteLocationIds,
+} from "@/features/bookCourt/bookCourtData";
 import type { Court, Location } from "@/types";
 import {
   createBooking,
@@ -54,6 +59,8 @@ export const useVenueMakeMatch = (locationId?: string) => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [bookingBusy, setBookingBusy] = useState(false);
+  const [favoriteLocationIds, setFavoriteLocationIds] = useState<string[]>([]);
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
 
   const dateKey = useMemo(() => toDateKeyLocal(selectedDate), [selectedDate]);
   const days = useMemo(() => generateDays(7), []);
@@ -123,6 +130,64 @@ export const useVenueMakeMatch = (locationId?: string) => {
   useEffect(() => {
     loadBookingsAndMatches();
   }, [locationId, dateKey]);
+
+  useEffect(() => {
+    const loadFavorites = async () => {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        setFavoriteLocationIds([]);
+        return;
+      }
+
+      try {
+        const ids = await fetchUserFavoriteLocationIds(currentUser.uid);
+        setFavoriteLocationIds(ids);
+      } catch (e) {
+        console.error(e);
+        setFavoriteLocationIds([]);
+      }
+    };
+
+    loadFavorites().catch((e) => {
+      console.error(e);
+      setFavoriteLocationIds([]);
+    });
+  }, []);
+
+  const isFavorite = Boolean(
+    locationId && favoriteLocationIds.includes(locationId),
+  );
+
+  const toggleVenueFavorite = async () => {
+    if (!locationId || favoriteBusy) return;
+
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      Alert.alert("Sign in required", "Please sign in to save favorites.");
+      return;
+    }
+
+    const nextFavorites = favoriteLocationIds.includes(locationId)
+      ? favoriteLocationIds.filter((id) => id !== locationId)
+      : [...favoriteLocationIds, locationId];
+
+    setFavoriteLocationIds(nextFavorites);
+    setFavoriteBusy(true);
+
+    try {
+      await persistUserFavoriteLocationIds(currentUser.uid, nextFavorites);
+    } catch (e) {
+      console.error(e);
+      setFavoriteLocationIds((current) =>
+        current.includes(locationId)
+          ? current.filter((id) => id !== locationId)
+          : [...current, locationId],
+      );
+      Alert.alert("Could not save", "Please try again.");
+    } finally {
+      setFavoriteBusy(false);
+    }
+  };
 
   const getSelectedStartMinute = () => {
     if (!selectedTime) return null;
@@ -299,8 +364,11 @@ export const useVenueMakeMatch = (locationId?: string) => {
     bookingBusy,
     dateKey,
     days,
+    isFavorite,
+    favoriteBusy,
     isCourtAvailable,
     priceForDuration,
+    toggleVenueFavorite,
     handleBook,
     handleCreateMatch,
     handleJoinMatch,
