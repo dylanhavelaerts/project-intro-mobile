@@ -8,9 +8,7 @@ import {
   StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
-  Keyboard,
   Platform,
-  TouchableWithoutFeedback,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import {
@@ -58,13 +56,13 @@ export default function SubmitResultScreen() {
     "Player B1",
     "Player B2",
   ]).slice(0, 2);
-
   const teamALabel =
     teamAPlayerNames.filter((name) => name.trim().length > 0).join(" & ") ||
     "Team A";
   const teamBLabel =
     teamBPlayerNames.filter((name) => name.trim().length > 0).join(" & ") ||
     "Team B";
+  const matchLabel = `${teamALabel} vs ${teamBLabel}`;
   const currentUserId = auth.currentUser?.uid ?? null;
   const isParticipant =
     currentUserId != null &&
@@ -167,7 +165,7 @@ export default function SubmitResultScreen() {
         )}
         <TouchableOpacity
           style={styles.btn}
-          onPress={() => router.replace("/")}
+          onPress={() => router.replace("/(main)/homepage/home")}
         >
           <Text style={styles.btnText}>Back to Home</Text>
         </TouchableOpacity>
@@ -177,105 +175,102 @@ export default function SubmitResultScreen() {
 
   // ─── Main ─────────────────────────────────────────────
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <KeyboardAvoidingView
-        style={styles.screen}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+    <KeyboardAvoidingView
+      style={styles.screen}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+    >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+        contentInsetAdjustmentBehavior="always"
       >
-        <ScrollView
-          contentContainerStyle={styles.container}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={
-            Platform.OS === "ios" ? "interactive" : "on-drag"
-          }
-          contentInsetAdjustmentBehavior="always"
-        >
-          <Text style={styles.title}>Enter Match Results</Text>
+        <Text style={styles.title}>Enter Match Results</Text>
+        <View style={styles.teamHeaderGroup}>
           <Text style={styles.sub}>Team A vs Team B</Text>
-          <Text style={styles.sub}>{teamALabel}</Text>
-          <Text style={styles.sub}>{teamBLabel}</Text>
+          <Text style={styles.sub}>{matchLabel}</Text>
+        </View>
 
-          {isCompetitive ? (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>
-                Competitive — ratings will update
-              </Text>
-            </View>
-          ) : (
-            <View style={[styles.badge, styles.badgeFriendly]}>
-              <Text style={styles.badgeText}>
-                🤝 Friendly — ratings unchanged
-              </Text>
-            </View>
-          )}
+        {isCompetitive ? (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>
+              Competitive — ratings will update
+            </Text>
+          </View>
+        ) : (
+          <View style={[styles.badge, styles.badgeFriendly]}>
+            <Text style={styles.badgeText}>
+              🤝 Friendly — ratings unchanged
+            </Text>
+          </View>
+        )}
 
-          {sets.map((set, index) => (
-            <View key={index} style={styles.setRow}>
-              <Text style={styles.setLabel}>Set {index + 1}</Text>
+        {sets.map((set, index) => (
+          <View key={index} style={styles.setRow}>
+            <Text style={styles.setLabel}>Set {index + 1}</Text>
 
-              <View style={styles.scoreInputs}>
-                <View style={styles.scoreBlock}>
-                  <Text style={styles.playerLabel} numberOfLines={1}>
-                    Team A
-                  </Text>
-                  <TextInput
-                    style={styles.scoreInput}
-                    keyboardType="number-pad"
-                    value={String(set.team1)}
-                    onChangeText={(v) => updateSet(index, "team1", v)}
-                    maxLength={2}
-                  />
-                </View>
+            <View style={styles.scoreInputs}>
+              <View style={styles.scoreBlock}>
+                <Text style={styles.playerLabel} numberOfLines={1}>
+                  Team A
+                </Text>
+                <TextInput
+                  style={styles.scoreInput}
+                  keyboardType="number-pad"
+                  value={String(set.team1)}
+                  onChangeText={(v) => updateSet(index, "team1", v)}
+                  maxLength={2}
+                />
+              </View>
 
-                <Text style={styles.dash}>—</Text>
+              <Text style={styles.dash}>—</Text>
 
-                <View style={styles.scoreBlock}>
-                  <Text style={styles.playerLabel} numberOfLines={1}>
-                    Team B
-                  </Text>
-                  <TextInput
-                    style={styles.scoreInput}
-                    keyboardType="number-pad"
-                    value={String(set.team2)}
-                    onChangeText={(v) => updateSet(index, "team2", v)}
-                    maxLength={2}
-                  />
-                </View>
+              <View style={styles.scoreBlock}>
+                <Text style={styles.playerLabel} numberOfLines={1}>
+                  Team B
+                </Text>
+                <TextInput
+                  style={styles.scoreInput}
+                  keyboardType="number-pad"
+                  value={String(set.team2)}
+                  onChangeText={(v) => updateSet(index, "team2", v)}
+                  maxLength={2}
+                />
               </View>
             </View>
-          ))}
-
-          <View style={styles.setControls}>
-            {sets.length < 3 && (
-              <TouchableOpacity onPress={addSet} style={styles.setControlBtn}>
-                <Text style={styles.setControlText}>+ Add set 3</Text>
-              </TouchableOpacity>
-            )}
-            {sets.length === 3 && (
-              <TouchableOpacity
-                onPress={removeSet}
-                style={styles.setControlBtn}
-              >
-                <Text style={[styles.setControlText, { color: "#dc2626" }]}>
-                  − Remove set 3
-                </Text>
-              </TouchableOpacity>
-            )}
           </View>
+        ))}
 
-          {error && <Text style={styles.error}>{error}</Text>}
-
-          {loading ? (
-            <ActivityIndicator size="large" color="#2563eb" />
-          ) : (
-            <TouchableOpacity style={styles.btn} onPress={handleSubmit}>
-              <Text style={styles.btnText}>Submit Result</Text>
+        <View style={styles.setControls}>
+          {sets.length < 3 && (
+            <TouchableOpacity onPress={addSet} style={styles.setControlBtn}>
+              <Text style={styles.setControlText}>+ Add set 3</Text>
             </TouchableOpacity>
           )}
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </TouchableWithoutFeedback>
+          {sets.length === 3 && (
+            <TouchableOpacity
+              onPress={removeSet}
+              style={styles.setControlBtn}
+            >
+              <Text style={[styles.setControlText, { color: "#dc2626" }]}>
+                − Remove set 3
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {error && <Text style={styles.error}>{error}</Text>}
+
+        {loading ? (
+          <ActivityIndicator size="large" color="#2563eb" />
+        ) : (
+          <TouchableOpacity style={styles.btn} onPress={handleSubmit}>
+            <Text style={styles.btnText}>Submit Result</Text>
+          </TouchableOpacity>
+        )}
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -303,6 +298,10 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 22, fontWeight: "700", textAlign: "center" },
   sub: { fontSize: 14, color: "#666", textAlign: "center" },
+  teamHeaderGroup: {
+    gap: 4,
+    alignItems: "center",
+  },
   badge: {
     backgroundColor: "#eff6ff",
     borderRadius: 8,
